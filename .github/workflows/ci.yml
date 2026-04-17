@@ -15,8 +15,8 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_USER: anatoquizup
-          POSTGRES_PASSWORD: anatoquizup
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB: anatoquizup_test
         ports:
           - 5432:5432
@@ -28,8 +28,8 @@ jobs:
 
     env:
       NODE_ENV: test
-      DATABASE_URL: postgres://anatoquizup:anatoquizup@localhost:5432/anatoquizup_test
-      JWT_SECRET: test-secret-only-for-ci
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
     steps:
       - name: Checkout
@@ -75,7 +75,7 @@ jobs:
           echo "::notice::Cobertura ok: $COVERAGE%"
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v2
+        uses: SonarSource/sonarqube-scan-action@299e4b793aaa83bf2aba7c9c14bedbb485688ec4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
