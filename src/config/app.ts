@@ -2,6 +2,7 @@ import cors from "cors";
 import express, { Router } from "express";
 import helmet from "helmet";
 
+import { authRouter } from "@/modules/auth";
 import { exemploRouter } from "@/modules/exemplo";
 import { MENSAGENS } from "@/shared/constants/mensagens";
 import { ErroAplicacao } from "@/shared/errors/erro-aplicacao";
@@ -27,8 +28,10 @@ aplicacao.get("/health", (_request, response) => {
   });
 });
 
+roteadorApi.use("/auth", authRouter);
 roteadorApi.use("/exemplos", exemploRouter);
 aplicacao.use("/api/v1", roteadorApi);
+aplicacao.use("/api/auth", authRouter);
 
 aplicacao.use((_request, _response, next) => {
   next(
