@@ -2,11 +2,7 @@ import jwt from "jsonwebtoken";
 
 import { PAPEIS } from "../../constants/papeis";
 import { STATUS } from "@/shared/constants/status";
-import {
-  jwtSecretKey,
-  jwtRefreshSecretKey,
-  jwtPasswordRedefinitionSecretKey,
-} from "@/config/env";
+import { jwtSecretKey, jwtRefreshSecretKey, jwtPasswordRedefinitionSecretKey } from "@/config/env";
 import type { AuthPayload } from "@/shared/types/auth.types";
 import {
   generateAccessToken,

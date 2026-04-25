@@ -30,7 +30,7 @@ describe("Test auth middleware", () => {
 
   test("Should call next if valid token provided", () => {
     const token = generateAccessToken(auth_payload);
-    mock_request.headers = { authorization: token };
+    mock_request.headers = { authorization: "Bearer " + token };
     middlewareAutenticacao(mock_request as Request, mock_response as Response, next_function);
     expect(next_function).toHaveBeenCalled();
   });
@@ -47,6 +47,18 @@ describe("Test auth middleware", () => {
     }
   });
 
+  test("Should return 401 if authorization header does not start with 'Bearer '", () => {
+    mock_request.headers = { authorization: "invalid_token" };
+    try {
+      middlewareAutenticacao(mock_request as Request, mock_response as Response, next_function);
+    } catch (error: unknown) {
+      const typed_error = error as ErroAplicacao;
+      expect(typed_error.message).toBe("Token inválido");
+      expect(typed_error.codigoStatus).toBe(401);
+      expect(next_function).not.toHaveBeenCalled();
+    }
+  });
+
   test("Should return 401 if invalid token provided", () => {
     mock_request.headers = { authorization: "invalid_token" };
     try {
@@ -55,6 +67,63 @@ describe("Test auth middleware", () => {
       const typed_error = error as ErroAplicacao;
       expect(typed_error.message).toBe("Token inválido");
       expect(typed_error.codigoStatus).toBe(401);
+      expect(next_function).not.toHaveBeenCalled();
+    }
+  });
+
+  test("Should return 403 if user auth payload is 'INATIVO'", () => {
+    const inactive_payload: AuthPayload = {
+      id: "uuid",
+      email: "email@domain",
+      role: PAPEIS.ALUNO,
+      status: STATUS.INATIVO,
+    };
+    const token = generateAccessToken(inactive_payload);
+    mock_request.headers = { authorization: "Bearer " + token };
+    try {
+      middlewareAutenticacao(mock_request as Request, mock_response as Response, next_function);
+    } catch (error: unknown) {
+      const typed_error = error as ErroAplicacao;
+      expect(typed_error.message).toBe("Conta desativada");
+      expect(typed_error.codigoStatus).toBe(403);
+      expect(next_function).not.toHaveBeenCalled();
+    }
+  });
+
+  test("Should return 403 if user auth payload is 'PENDENTE'", () => {
+    const inactive_payload: AuthPayload = {
+      id: "uuid",
+      email: "email@domain",
+      role: PAPEIS.ALUNO,
+      status: STATUS.PENDENTE,
+    };
+    const token = generateAccessToken(inactive_payload);
+    mock_request.headers = { authorization: "Bearer " + token };
+    try {
+      middlewareAutenticacao(mock_request as Request, mock_response as Response, next_function);
+    } catch (error: unknown) {
+      const typed_error = error as ErroAplicacao;
+      expect(typed_error.message).toBe("Cadastro em análise");
+      expect(typed_error.codigoStatus).toBe(403);
+      expect(next_function).not.toHaveBeenCalled();
+    }
+  });
+
+  test("Should return 403 if user auth payload is 'RECUSADO'", () => {
+    const inactive_payload: AuthPayload = {
+      id: "uuid",
+      email: "email@domain",
+      role: PAPEIS.ALUNO,
+      status: STATUS.RECUSADO,
+    };
+    const token = generateAccessToken(inactive_payload);
+    mock_request.headers = { authorization: "Bearer " + token };
+    try {
+      middlewareAutenticacao(mock_request as Request, mock_response as Response, next_function);
+    } catch (error: unknown) {
+      const typed_error = error as ErroAplicacao;
+      expect(typed_error.message).toBe("Cadastro recusado");
+      expect(typed_error.codigoStatus).toBe(403);
       expect(next_function).not.toHaveBeenCalled();
     }
   });
