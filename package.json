@@ -58,6 +58,7 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^24.8.1",
     "babel-jest": "^30.3.0",
+    "babel-plugin-module-resolver": "^5.0.3",
     "eslint": "^9.38.0",
     "eslint-config-prettier": "^10.1.8",
     "jest": "^30.3.0",

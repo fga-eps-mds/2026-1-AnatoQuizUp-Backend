@@ -1,15 +1,20 @@
-import type { RequestHandler } from "express";
+import type { Response, Request, NextFunction } from "express";
 
-import { MENSAGENS } from "@/shared/constants/mensagens";
-import { CodigoDeErro } from "@/shared/errors/codigos-de-erro";
+import { verifyJwtToken } from "../utils/jwt";
 import { ErroAplicacao } from "@/shared/errors/erro-aplicacao";
 
-export const middlewareAutenticacao: RequestHandler = (_request, _response, next) => {
-  next(
-    new ErroAplicacao({
-      codigoStatus: 501,
-      codigo: CodigoDeErro.NAO_IMPLEMENTADO,
-      mensagem: MENSAGENS.autenticacaoNaoImplementada,
-    }),
-  );
+export const middlewareAutenticacao = (request: Request, response: Response, next: NextFunction) => {
+
+  const token = request.headers["authorization"];
+      
+  if(!token){
+      throw new ErroAplicacao({
+        mensagem: "Nenhum token foi fornecido",
+        codigo: "NENHUM_TOKEN_FORNECIDO",
+        codigoStatus: 401,
+      });
+  }
+
+  verifyJwtToken(token);
+  next();
 };
