@@ -1,9 +1,9 @@
 import jwt from "jsonwebtoken"
 
 import { PAPEIS } from "../../constants/papeis";
-import { jwtSecretKey } from "../../../config/env";
-import { AuthPayload } from "../../types/api.types";
-import { generateAccessToken, generateRefreshToken, verifyJwtToken } from "../jwt";
+import { jwtSecretKey, jwtRefreshSecretKey, jwtPasswordRedefinitionSecretKey } from "../../../config/env";
+import { AuthPayload } from "../../types/auth.types";
+import { generateAccessToken, generatePasswordRedefinitionToken, generateRefreshToken, verifyJwtToken } from "../jwt";
 
 const auth_payload: AuthPayload = {
   id: "uuid",
@@ -21,8 +21,14 @@ describe("testing jwt utils", () => {
     });
 
     test("successfully generate refresh token", () => {
-      const token: string = generateRefreshToken(auth_payload, jwtSecretKey);
-      const verified_token: AuthPayload = jwt.verify(token, jwtSecretKey) as AuthPayload;
+      const token: string = generateRefreshToken(auth_payload, jwtRefreshSecretKey);
+      const verified_token: AuthPayload = jwt.verify(token, jwtRefreshSecretKey) as AuthPayload;
+      expect(verified_token.id).toEqual('uuid');
+    });
+
+    test("successfully generate password redefinition token", () => {
+      const token: string = generatePasswordRedefinitionToken(auth_payload, jwtPasswordRedefinitionSecretKey);
+      const verified_token: AuthPayload = jwt.verify(token, jwtPasswordRedefinitionSecretKey) as AuthPayload;
       expect(verified_token.id).toEqual('uuid');
     });
 
