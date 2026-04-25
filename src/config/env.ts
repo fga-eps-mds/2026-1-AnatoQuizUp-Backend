@@ -11,7 +11,8 @@ const envSchema = z.object({
     .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
     .default("info"),
     JWT_SECRET_KEY: z.string(),
-    JWT_REFRESH_SECRET_KEY: z.string()
+    JWT_REFRESH_SECRET_KEY: z.string(),
+    JWT_PASSWORD_REDEFINITION_SECRET_KEY: z.string(),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
@@ -28,6 +29,7 @@ export const env  = parsedEnv.data;
 type CustomEnv = {
   JWT_SECRET_KEY: string;
   JWT_REFRESH_SECRET_KEY: string;
+  JWT_PASSWORD_REDEFINITION_SECRET_KEY: string;
   PORT: number;
 }
 
@@ -44,3 +46,4 @@ function getEnvVariable(key: keyof CustomEnv): string | number {
 
 export const jwtSecretKey = getEnvVariable("JWT_SECRET_KEY") as string;
 export const jwtRefreshSecretKey = getEnvVariable("JWT_REFRESH_SECRET_KEY") as string;
+export const jwtPasswordRedefinitionSecretKey = getEnvVariable("JWT_PASSWORD_REDEFINITION_SECRET_KEY") as string;
