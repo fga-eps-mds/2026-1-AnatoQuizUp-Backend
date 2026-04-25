@@ -31,6 +31,7 @@ enum StatusUsuario {
 }
 
 enum NivelEducacional {
+  ENSINO_FUNDAMENTAL
   ENSINO_MEDIO
   GRADUACAO
   POS_GRADUACAO
@@ -51,7 +52,7 @@ model Usuario {
   // Campos específicos de aluno
   instituicao      String?
   curso            String?
-  semestre         Int?
+  semestre         String?
   estado           String?
   cidade           String?
   nacionalidade    String?
