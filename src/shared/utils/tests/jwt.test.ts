@@ -1,0 +1,54 @@
+import jwt from "jsonwebtoken"
+
+import { PAPEIS } from "../../constants/papeis";
+import { jwtSecretKey } from "../../../config/env";
+import { AuthPayload } from "../../types/api.types";
+import { generateAccessToken, generateRefreshToken, verifyJwtToken } from "../jwt";
+
+const auth_payload: AuthPayload = {
+  id: "uuid",
+  email: "email@domain",
+  role: PAPEIS.ALUNO,
+  status: "ACTIVE"
+};
+
+describe("testing jwt utils", () => {
+
+    test("successfully generate access token ", () => {
+      const token: string = generateAccessToken(auth_payload, jwtSecretKey);
+      const verified_token: AuthPayload = jwt.verify(token, jwtSecretKey) as AuthPayload;
+      expect(verified_token.id).toEqual("uuid");
+    });
+
+    test("successfully generate refresh token", () => {
+      const token: string = generateRefreshToken(auth_payload, jwtSecretKey);
+      const verified_token: AuthPayload = jwt.verify(token, jwtSecretKey) as AuthPayload;
+      expect(verified_token.id).toEqual('uuid');
+    });
+
+    test("successfully verify valid token", () => {
+        const token = jwt.sign(auth_payload, jwtSecretKey);
+        const verified_token: AuthPayload = verifyJwtToken(token, jwtSecretKey) as AuthPayload;
+        expect(verified_token.id).toEqual('uuid');
+    });
+
+    test("verify should throw 'Token verification failed' for malformed token)", () => {
+        try {
+            verifyJwtToken('malformed-token', jwtSecretKey);
+        } catch (error: unknown) {
+            const typedError = error as Error;
+            expect(typedError.message).toBe('jwt malformed');
+        }
+    });
+
+    test("verify should throw 'Token has expired' for an expired token", () => {
+        const expiredToken = jwt.sign(auth_payload, jwtSecretKey, { expiresIn: '-1s' })
+        try {
+            verifyJwtToken(expiredToken, jwtSecretKey);
+        } catch (error: unknown) {
+            const typedError = error as Error;
+            expect(typedError.message).toBe('jwt expired');
+        }
+    });
+
+});
