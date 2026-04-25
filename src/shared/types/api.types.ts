@@ -1,3 +1,5 @@
+import { Papel } from "../constants/papeis";
+
 export type RespostaApiSucesso<T> = {
   mensagem: string;
   dados: T;
@@ -22,3 +24,10 @@ export type RespostaApiErro = {
     detalhes?: unknown;
   };
 };
+
+export type AuthPayload = {
+  id: string;
+  email: string;
+  role: Papel;
+  status: string;
+}
