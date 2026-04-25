@@ -20,6 +20,14 @@ export const middlewareAutenticacao = (
     });
   }
 
+  if (!authorization_field.startsWith("Bearer ")) {
+    throw new ErroAplicacao({
+      mensagem: "Token inválido",
+      codigo: "TOKEN_INVALIDO",
+      codigoStatus: 401,
+    });
+  }
+
   const token: string = authorization_field.replace("Bearer ", "");
 
   const payload: AuthPayload = verifyJwtToken(token);
