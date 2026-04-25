@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken"
 
 import { PAPEIS } from "../../constants/papeis";
+import { STATUS } from "@/shared/constants/status";
 import { jwtSecretKey, jwtRefreshSecretKey, jwtPasswordRedefinitionSecretKey } from "../../../config/env";
 import { AuthPayload } from "../../types/auth.types";
 import { generateAccessToken, generatePasswordRedefinitionToken, generateRefreshToken, verifyJwtToken } from "../jwt";
@@ -9,7 +10,7 @@ const auth_payload: AuthPayload = {
   id: "uuid",
   email: "email@domain",
   role: PAPEIS.ALUNO,
-  status: "ACTIVE"
+  status: STATUS.ATIVO
 };
 
 describe("testing jwt utils", () => {

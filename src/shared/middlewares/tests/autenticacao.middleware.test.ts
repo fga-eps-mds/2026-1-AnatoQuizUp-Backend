@@ -1,15 +1,16 @@
 import { Request, Response, NextFunction } from "express";
 import { middlewareAutenticacao } from "../autenticacao.middleware";
 import { generateAccessToken } from "@/shared/utils/jwt";
-import { AuthPayload } from "@/shared/types/api.types";
+import { AuthPayload } from "@/shared/types/auth.types";
 import { PAPEIS } from "@/shared/constants/papeis";
+import { STATUS } from "@/shared/constants/status";
 import { ErroAplicacao } from "@/shared/errors/erro-aplicacao";
 
 const auth_payload: AuthPayload = {
   id: "uuid",
   email: "email@domain",
   role: PAPEIS.ALUNO,
-  status: "ACTIVE"
+  status: STATUS.ATIVO
 };
 
 describe("Test auth middleware", () => {
