@@ -1,5 +1,3 @@
-import { Papel } from "../constants/papeis";
-
 export type RespostaApiSucesso<T> = {
   mensagem: string;
   dados: T;
