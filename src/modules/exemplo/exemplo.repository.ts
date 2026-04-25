@@ -39,10 +39,7 @@ export class ExemploRepository {
       FROM exemplos
     `;
 
-    const [data, totalResultado] = await prisma.$transaction([
-      consultaListagem,
-      consultaTotal,
-    ]);
+    const [data, totalResultado] = await prisma.$transaction([consultaListagem, consultaTotal]);
 
     return {
       data,
