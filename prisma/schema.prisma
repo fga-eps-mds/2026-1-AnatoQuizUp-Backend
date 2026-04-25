@@ -16,3 +16,90 @@ model Exemplo {
 
   @@map("exemplos")
 }
+
+enum PerfilUsuario {
+  ALUNO
+  PROFESSOR
+  ADMIN
+}
+
+enum StatusUsuario {
+  PENDENTE
+  ATIVO
+  INATIVO
+  RECUSADO
+}
+
+enum NivelEducacional {
+  ENSINO_MEDIO
+  GRADUACAO
+  POS_GRADUACAO
+  MESTRADO
+  DOUTORADO
+  OUTRO
+}
+
+model Usuario {
+  id    String @id @default(cuid())
+  nome  String
+  email String @unique
+  senha String
+
+  perfil PerfilUsuario
+  status StatusUsuario @default(ATIVO)
+
+  // Campos específicos de aluno
+  instituicao      String?
+  curso            String?
+  semestre         Int?
+  estado           String?
+  cidade           String?
+  nacionalidade    String?
+  dataNascimento   DateTime?
+  nivelEducacional NivelEducacional?
+
+  // Campos específicos de professor
+  departamento String?
+  siape        String? @unique
+
+  // Controle de aprovação
+  aprovadoPorId String?
+  aprovadoEm    DateTime?
+
+  refreshTokens          RefreshToken[]
+  tokensRedefinicaoSenha TokenRedefinicaoSenha[]
+
+  criadoEm     DateTime  @default(now())
+  atualizadoEm DateTime  @updatedAt
+  excluidoEm   DateTime?
+
+  @@map("usuarios")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  usuarioId String
+  expiraEm  DateTime
+
+  revogadoEm DateTime?
+  criadoEm   DateTime  @default(now())
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+model TokenRedefinicaoSenha {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  usuarioId String
+  expiraEm  DateTime
+
+  usadoEm  DateTime?
+  criadoEm DateTime  @default(now())
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@map("tokens_redefinicao_senha")
+}
