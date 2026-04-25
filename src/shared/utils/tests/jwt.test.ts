@@ -37,7 +37,7 @@ describe("testing jwt utils", () => {
             verifyJwtToken('malformed-token', jwtSecretKey);
         } catch (error: unknown) {
             const typedError = error as Error;
-            expect(typedError.message).toBe('jwt malformed');
+            expect(typedError.message).toBe('Token inválido');
         }
     });
 
@@ -47,7 +47,7 @@ describe("testing jwt utils", () => {
             verifyJwtToken(expiredToken, jwtSecretKey);
         } catch (error: unknown) {
             const typedError = error as Error;
-            expect(typedError.message).toBe('jwt expired');
+            expect(typedError.message).toBe('Token expirado');
         }
     });
 

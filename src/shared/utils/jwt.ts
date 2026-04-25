@@ -2,6 +2,7 @@ import jwt, { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
 
 import { AuthPayload } from "../types/api.types";
 import { jwtSecretKey, jwtRefreshSecretKey } from "../../config/env";
+import { ErroAplicacao } from "../errors/erro-aplicacao";
 
 export const verifyJwtToken = (token: string, secret: string = jwtSecretKey) => {
     try{
@@ -10,11 +11,26 @@ export const verifyJwtToken = (token: string, secret: string = jwtSecretKey) => 
     }
     catch (error: unknown) {
         if (error instanceof TokenExpiredError) {
-            throw error;
+            throw new ErroAplicacao({
+                mensagem: "Token expirado",
+                codigo: "TOKEN_EXPIRADO",
+                codigoStatus: 401,
+                detalhes: error,
+            });
         } else if (error instanceof JsonWebTokenError) {
-            throw error;
+            throw new ErroAplicacao({
+                mensagem: "Token inválido",
+                codigo: "TOKEN_INVALIDO",
+                codigoStatus: 401,
+                detalhes: error,
+            });
         } else {
-            throw new Error('Token verification failed');
+            throw new ErroAplicacao({
+                mensagem: "Falha na verificação do token",
+                codigo: "VERIFICACAO_TOKEN_FALHOU",
+                codigoStatus: 401,
+                detalhes: error,
+            });
         }
     }
 }
