@@ -1,4 +1,4 @@
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { Prisma } from "@prisma/client";
 
 import type { AlunoAuthRepository } from "@/modules/auth/aluno/aluno.repository";
