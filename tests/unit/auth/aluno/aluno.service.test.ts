@@ -1,4 +1,4 @@
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { describe, expect, it, vi } from "vitest";
 
 import type { AlunoAuthRepository } from "@/modules/auth/aluno/aluno.repository";
