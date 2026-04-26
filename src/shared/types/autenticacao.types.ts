@@ -1,8 +1,8 @@
 import type { Papel } from "../constants/papeis";
 
-export type AuthPayload = {
+export type PayloadAutenticacao = {
   id: string;
   email: string;
-  role: Papel;
+  papel: Papel;
   status: string;
 };
