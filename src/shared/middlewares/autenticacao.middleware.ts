@@ -1,8 +1,8 @@
 import type { Response, Request, NextFunction } from "express";
 
-import { verifyJwtToken } from "../utils/jwt";
+import { verificarTokenJwt } from "../utils/jwt";
 import { ErroAplicacao } from "@/shared/errors/erro-aplicacao";
-import type { AuthPayload } from "../types/auth.types";
+import type { PayloadAutenticacao } from "../types/autenticacao.types";
 import { STATUS } from "../constants/status";
 
 export const middlewareAutenticacao = (
@@ -10,9 +10,15 @@ export const middlewareAutenticacao = (
   response: Response,
   next: NextFunction,
 ) => {
-  const authorization_field: string | undefined = request.headers["authorization"];
 
-  if (!authorization_field) {
+  const rotas_publicas = ["/login", '/register', 'forgot-password', 'reset-password', 'refresh', '/'];
+  if (rotas_publicas.includes(request.path)) {
+    return next();
+  }
+
+  const campo_authorization: string | undefined = request.headers["authorization"];
+
+  if (!campo_authorization) {
     throw new ErroAplicacao({
       mensagem: "Nenhum token foi fornecido",
       codigo: "NENHUM_TOKEN_FORNECIDO",
@@ -20,7 +26,7 @@ export const middlewareAutenticacao = (
     });
   }
 
-  if (!authorization_field.startsWith("Bearer ")) {
+  if (!campo_authorization.startsWith("Bearer ")) {
     throw new ErroAplicacao({
       mensagem: "Token inválido",
       codigo: "TOKEN_INVALIDO",
@@ -28,9 +34,9 @@ export const middlewareAutenticacao = (
     });
   }
 
-  const token: string = authorization_field.replace("Bearer ", "");
+  const token: string = campo_authorization.replace("Bearer ", "");
 
-  const payload: AuthPayload = verifyJwtToken(token);
+  const payload: PayloadAutenticacao = verificarTokenJwt(token);
 
   if (payload.status != STATUS.ATIVO) {
     if (payload.status == STATUS.INATIVO) {
