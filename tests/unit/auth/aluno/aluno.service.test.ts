@@ -8,10 +8,13 @@ import { MENSAGENS } from "@/shared/constants/mensagens";
 import { CodigoDeErro } from "@/shared/errors/codigos-de-erro";
 
 function criarAlunoAuthRepositoryMock() {
-  const buscarPorEmail = vi.fn<AlunoAuthRepository["buscarPorEmail"]>().mockResolvedValue(null);
+  const buscarPorEmail = vi.fn<AlunoAuthRepository["buscarPorEmail"]>(async () => null);
+  const buscarPorNickname = vi
+    .fn<AlunoAuthRepository["buscarPorNickname"]>(async () => null);
   const criar = vi.fn<AlunoAuthRepository["criar"]>(async (data) => ({
     id: "usuario-id",
     nome: data.nome,
+    nickname: data.nickname,
     email: data.email,
     instituicao: data.instituicao,
     curso: data.curso,
@@ -32,19 +35,26 @@ function criarAlunoAuthRepositoryMock() {
   }));
 
   return {
-    alunoAuthRepository: { buscarPorEmail, criar } as unknown as AlunoAuthRepository,
+    alunoAuthRepository: {
+      buscarPorEmail,
+      buscarPorNickname,
+      criar,
+    } as unknown as AlunoAuthRepository,
     buscarPorEmail,
+    buscarPorNickname,
     criar,
   };
 }
 
 describe("AlunoAuthService", () => {
   it("cadastra aluno com todos os campos, senha hasheada e perfil ALUNO/ATIVO", async () => {
-    const { alunoAuthRepository, buscarPorEmail, criar } = criarAlunoAuthRepositoryMock();
+    const { alunoAuthRepository, buscarPorEmail, buscarPorNickname, criar } =
+      criarAlunoAuthRepositoryMock();
     const service = new AlunoAuthService(alunoAuthRepository);
 
     const resposta = await service.registrar({
       nome: "  Joao   da Silva Junior  ",
+      nickname: " Joao_Junior ",
       email: "JOAO.JUNIOR@ALUNO.UNB.BR",
       senha: "senha1234",
       confirmacaoSenha: "senha1234",
@@ -61,6 +71,7 @@ describe("AlunoAuthService", () => {
     const dadosCriacao = criar.mock.calls[0]?.[0];
 
     expect(buscarPorEmail).toHaveBeenCalledWith("joao.junior@aluno.unb.br");
+    expect(buscarPorNickname).toHaveBeenCalledWith("joao_junior");
     expect(dadosCriacao).toBeDefined();
 
     if (!dadosCriacao) {
@@ -68,6 +79,7 @@ describe("AlunoAuthService", () => {
     }
 
     expect(dadosCriacao.nome).toBe("Joao da Silva Junior");
+    expect(dadosCriacao.nickname).toBe("joao_junior");
     expect(dadosCriacao.email).toBe("joao.junior@aluno.unb.br");
     expect(dadosCriacao.instituicao).toBe("Universidade de Brasilia");
     expect(dadosCriacao.curso).toBe("Medicina");
@@ -84,6 +96,7 @@ describe("AlunoAuthService", () => {
     await expect(bcrypt.compare("senha1234", dadosCriacao.senhaHash)).resolves.toBe(true);
     expect(resposta).not.toHaveProperty("senha");
     expect(resposta).not.toHaveProperty("senhaHash");
+    expect(resposta.nickname).toBe("joao_junior");
     expect(resposta.dataNascimento).toBe("2003-12-30");
   });
 
@@ -93,6 +106,7 @@ describe("AlunoAuthService", () => {
 
     const resposta = await service.registrar({
       nome: "Maria",
+      nickname: "maria",
       email: "maria@aluno.unb.br",
       senha: "senha1234",
       confirmacaoSenha: "senha1234",
@@ -125,6 +139,7 @@ describe("AlunoAuthService", () => {
     await expect(
       service.registrar({
         nome: "Joao",
+        nickname: "joao_junior",
         email: "joao.junior@aluno.unb.br",
         senha: "senha1234",
         confirmacaoSenha: "senha1234",
@@ -143,5 +158,67 @@ describe("AlunoAuthService", () => {
       message: MENSAGENS.emailJaCadastrado,
     });
     expect(criar).not.toHaveBeenCalled();
+  });
+
+  it("retorna conflito quando nickname ja esta cadastrado", async () => {
+    const { alunoAuthRepository, buscarPorNickname, criar } = criarAlunoAuthRepositoryMock();
+    buscarPorNickname.mockResolvedValue({
+      id: "usuario-existente",
+      nickname: "joao_junior",
+    });
+    const service = new AlunoAuthService(alunoAuthRepository);
+
+    await expect(
+      service.registrar({
+        nome: "Joao",
+        nickname: "joao_junior",
+        email: "joao.junior@aluno.unb.br",
+        senha: "senha1234",
+        confirmacaoSenha: "senha1234",
+        instituicao: "Universidade de Brasilia",
+        curso: "Medicina",
+        periodo: "3",
+        dataNascimento: "2003-12-30",
+        nacionalidade: "Brasileiro",
+        cidade: "Brasilia",
+        estado: "DF",
+        escolaridade: "GRADUACAO",
+      }),
+    ).rejects.toMatchObject({
+      codigoStatus: 409,
+      codigo: CodigoDeErro.CONFLITO,
+      message: MENSAGENS.nicknameJaCadastrado,
+    });
+    expect(criar).not.toHaveBeenCalled();
+  });
+
+  it("verifica disponibilidade de nickname", async () => {
+    const { alunoAuthRepository, buscarPorNickname } = criarAlunoAuthRepositoryMock();
+    const service = new AlunoAuthService(alunoAuthRepository);
+
+    await expect(
+      service.verificarNicknameDisponivel({ nickname: " Joao_Junior " }),
+    ).resolves.toEqual({
+      nickname: "joao_junior",
+      disponivel: true,
+    });
+
+    expect(buscarPorNickname).toHaveBeenCalledWith("joao_junior");
+  });
+
+  it("indica nickname indisponivel quando ja existe", async () => {
+    const { alunoAuthRepository, buscarPorNickname } = criarAlunoAuthRepositoryMock();
+    buscarPorNickname.mockResolvedValue({
+      id: "usuario-existente",
+      nickname: "joao_junior",
+    });
+    const service = new AlunoAuthService(alunoAuthRepository);
+
+    await expect(
+      service.verificarNicknameDisponivel({ nickname: "joao_junior" }),
+    ).resolves.toEqual({
+      nickname: "joao_junior",
+      disponivel: false,
+    });
   });
 });

@@ -3,7 +3,10 @@ import { describe, expect, it, vi } from "vitest";
 
 import { AlunoAuthController } from "@/modules/auth/aluno/aluno.controller";
 import type { AlunoAuthService } from "@/modules/auth/aluno/aluno.service";
-import type { RegistrarAlunoDto } from "@/modules/auth/aluno/dto/registrar.aluno.types";
+import type {
+  DisponibilidadeNicknameAlunoDto,
+  RegistrarAlunoDto,
+} from "@/modules/auth/aluno/dto/registrar.aluno.types";
 import type { RespostaAlunoDto } from "@/modules/auth/aluno/dto/resposta.aluno.types";
 import { MENSAGENS } from "@/shared/constants/mensagens";
 import type { RespostaApiSucesso } from "@/shared/types/api.types";
@@ -12,6 +15,7 @@ describe("AlunoAuthController", () => {
   it("retorna 201 com aluno cadastrado sem senha", async () => {
     const body: RegistrarAlunoDto = {
       nome: "Joao da Silva Junior",
+      nickname: "joao_junior",
       email: "joao.junior@aluno.unb.br",
       senha: "senha1234",
       confirmacaoSenha: "senha1234",
@@ -27,6 +31,7 @@ describe("AlunoAuthController", () => {
     const aluno: RespostaAlunoDto = {
       id: "usuario-id",
       nome: "Joao da Silva Junior",
+      nickname: "joao_junior",
       email: "joao.junior@aluno.unb.br",
       instituicao: "Universidade de Brasilia",
       curso: "Medicina",
@@ -62,6 +67,38 @@ describe("AlunoAuthController", () => {
     });
     expect(aluno).not.toHaveProperty("senha");
     expect(aluno).not.toHaveProperty("senhaHash");
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("retorna 200 com disponibilidade do nickname", async () => {
+    const disponibilidade = {
+      nickname: "joao_junior",
+      disponivel: true,
+    };
+    const verificarNicknameDisponivel = vi
+      .fn<AlunoAuthService["verificarNicknameDisponivel"]>()
+      .mockResolvedValue(disponibilidade);
+    const controller = new AlunoAuthController({
+      verificarNicknameDisponivel,
+    } as unknown as AlunoAuthService);
+    const request = {
+      query: { nickname: "joao_junior" },
+    } as Request<unknown, unknown, unknown, DisponibilidadeNicknameAlunoDto>;
+    const json = vi.fn();
+    const status = vi.fn(() => ({ json }));
+    const response = { status } as unknown as Response<
+      RespostaApiSucesso<typeof disponibilidade>
+    >;
+    const next = vi.fn();
+
+    await controller.verificarNicknameDisponivel(request, response, next);
+
+    expect(verificarNicknameDisponivel).toHaveBeenCalledWith({ nickname: "joao_junior" });
+    expect(status).toHaveBeenCalledWith(200);
+    expect(json).toHaveBeenCalledWith({
+      mensagem: MENSAGENS.nicknameDisponivel,
+      dados: disponibilidade,
+    });
     expect(next).not.toHaveBeenCalled();
   });
 });

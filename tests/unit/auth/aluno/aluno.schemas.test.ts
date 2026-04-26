@@ -8,6 +8,7 @@ import { validarRequisicao } from "@/shared/middlewares/validacao.middleware";
 
 const payloadValido = {
   nome: "Joao da Silva Junior",
+  nickname: "joao_junior",
   email: "joao@aluno.unb.br",
   senha: "senha1234",
   confirmacaoSenha: "senha1234",
@@ -33,13 +34,15 @@ function validarBody(body: unknown) {
 }
 
 describe("schemaRegistrarAluno", () => {
-  it("normaliza email e estado", () => {
+  it("normaliza nickname, email e estado", () => {
     const resultado = schemaRegistrarAluno.parse({
       ...payloadValido,
+      nickname: " Joao_123 ",
       email: "JOAO@ALUNO.UNB.BR",
       estado: "df",
     });
 
+    expect(resultado.nickname).toBe("joao_123");
     expect(resultado.email).toBe("joao@aluno.unb.br");
     expect(resultado.estado).toBe("DF");
   });
@@ -61,6 +64,16 @@ describe("schemaRegistrarAluno", () => {
     ["senha menor que 8 caracteres", { senha: "1234567", confirmacaoSenha: "1234567" }],
     ["confirmacao de senha diferente", { confirmacaoSenha: "outrasenha" }],
     ["email invalido", { email: "email-invalido" }],
+    ["nickname ausente", { nickname: undefined }],
+    ["nickname vazio", { nickname: "   " }],
+    ["nickname curto", { nickname: "ab" }],
+    ["nickname longo", { nickname: "abcdefghijklmnopqrstu" }],
+    ["nickname com espaco", { nickname: "joao junior" }],
+    ["nickname com acento", { nickname: "joao_júnior" }],
+    ["nickname com ponto", { nickname: "joao.junior" }],
+    ["nickname com hifen", { nickname: "joao-junior" }],
+    ["nickname com simbolo", { nickname: "joao!" }],
+    ["nickname comecando com numero", { nickname: "1joao" }],
     ["nome vazio", { nome: "   " }],
     ["data de nascimento ausente", { dataNascimento: undefined }],
     ["data de nascimento invalida", { dataNascimento: "30/12/2003" }],

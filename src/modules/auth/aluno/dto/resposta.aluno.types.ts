@@ -3,6 +3,7 @@ import type { Papel, StatusUsuario } from "@/shared/constants/papeis";
 export type RegistroAluno = {
   id: string;
   nome: string;
+  nickname: string | null;
   email: string;
   instituicao: string | null;
   curso: string | null;
@@ -22,6 +23,7 @@ export type RegistroAluno = {
 export type RespostaAlunoDto = {
   id: string;
   nome: string;
+  nickname: string | null;
   email: string;
   instituicao: string | null;
   curso: string | null;
@@ -42,6 +44,7 @@ export function converterParaRespostaAluno(aluno: RegistroAluno): RespostaAlunoD
   return {
     id: aluno.id,
     nome: aluno.nome,
+    nickname: aluno.nickname,
     email: aluno.email,
     instituicao: aluno.instituicao,
     curso: aluno.curso,

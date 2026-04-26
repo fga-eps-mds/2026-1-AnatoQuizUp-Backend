@@ -10,6 +10,7 @@ import type { Papel, StatusUsuario } from "@/shared/constants/papeis";
 
 export type CriarAlunoData = {
   nome: string;
+  nickname: string;
   email: string;
   senhaHash: string;
   instituicao: string;
@@ -34,9 +35,15 @@ type AlunoPorEmail = {
   email: string;
 };
 
+type AlunoPorNickname = {
+  id: string;
+  nickname: string;
+};
+
 type RegistroAlunoBanco = {
   id: string;
   nome: string;
+  nickname: string | null;
   email: string;
   instituicao: string | null;
   curso: string | null;
@@ -56,6 +63,7 @@ function converterRegistroBanco(registro: RegistroAlunoBanco): RegistroAluno {
   return {
     id: registro.id,
     nome: registro.nome,
+    nickname: registro.nickname,
     email: registro.email,
     instituicao: registro.instituicao,
     curso: registro.curso,
@@ -77,11 +85,22 @@ function converterRegistroBanco(registro: RegistroAlunoBanco): RegistroAluno {
 }
 
 export class AlunoAuthRepository {
-  async buscarPorEmail(email: string) {
+  async buscarPorEmail(email: string): Promise<AlunoPorEmail | null> {
     const registros = await prisma.$queryRaw<AlunoPorEmail[]>`
       SELECT id, email
       FROM usuarios
       WHERE email = ${email}
+      LIMIT 1
+    `;
+
+    return registros[0] ?? null;
+  }
+
+  async buscarPorNickname(nickname: string): Promise<AlunoPorNickname | null> {
+    const registros = await prisma.$queryRaw<AlunoPorNickname[]>`
+      SELECT id, nickname
+      FROM usuarios
+      WHERE nickname = ${nickname}
       LIMIT 1
     `;
 
@@ -95,6 +114,7 @@ export class AlunoAuthRepository {
       INSERT INTO usuarios (
         id,
         nome,
+        nickname,
         email,
         senha,
         perfil,
@@ -113,6 +133,7 @@ export class AlunoAuthRepository {
       VALUES (
         ${id},
         ${data.nome},
+        ${data.nickname},
         ${data.email},
         ${data.senhaHash},
         ${data.papel}::"PerfilUsuario",
@@ -131,6 +152,7 @@ export class AlunoAuthRepository {
       RETURNING
         id,
         nome,
+        nickname,
         email,
         instituicao,
         curso,
