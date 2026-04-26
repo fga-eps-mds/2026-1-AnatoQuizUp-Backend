@@ -86,9 +86,7 @@ describe("AlunoAuthController", () => {
     } as Request<unknown, unknown, unknown, DisponibilidadeNicknameAlunoDto>;
     const json = vi.fn();
     const status = vi.fn(() => ({ json }));
-    const response = { status } as unknown as Response<
-      RespostaApiSucesso<typeof disponibilidade>
-    >;
+    const response = { status } as unknown as Response<RespostaApiSucesso<typeof disponibilidade>>;
     const next = vi.fn();
 
     await controller.verificarNicknameDisponivel(request, response, next);
