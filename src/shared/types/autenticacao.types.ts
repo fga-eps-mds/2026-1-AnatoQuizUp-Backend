@@ -1,9 +1,9 @@
 import type { Papel } from "../constants/papeis";
 import type { Status } from "../constants/status";
 
-export type AuthPayload = {
+export type PayloadAutenticacao = {
   id: string;
   email: string;
-  role: Papel;
+  papel: Papel;
   status: Status;
 };
