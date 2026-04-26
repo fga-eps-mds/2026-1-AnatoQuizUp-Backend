@@ -9,8 +9,7 @@ import { CodigoDeErro } from "@/shared/errors/codigos-de-erro";
 
 function criarAlunoAuthRepositoryMock() {
   const buscarPorEmail = vi.fn<AlunoAuthRepository["buscarPorEmail"]>(async () => null);
-  const buscarPorNickname = vi
-    .fn<AlunoAuthRepository["buscarPorNickname"]>(async () => null);
+  const buscarPorNickname = vi.fn<AlunoAuthRepository["buscarPorNickname"]>(async () => null);
   const criar = vi.fn<AlunoAuthRepository["criar"]>(async (data) => ({
     id: "usuario-id",
     nome: data.nome,
@@ -214,11 +213,11 @@ describe("AlunoAuthService", () => {
     });
     const service = new AlunoAuthService(alunoAuthRepository);
 
-    await expect(
-      service.verificarNicknameDisponivel({ nickname: "joao_junior" }),
-    ).resolves.toEqual({
-      nickname: "joao_junior",
-      disponivel: false,
-    });
+    await expect(service.verificarNicknameDisponivel({ nickname: "joao_junior" })).resolves.toEqual(
+      {
+        nickname: "joao_junior",
+        disponivel: false,
+      },
+    );
   });
 });

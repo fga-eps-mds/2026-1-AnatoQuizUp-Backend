@@ -23,9 +23,7 @@ function dataIsoValida(valor: string) {
   const data = new Date(Date.UTC(ano, mes - 1, dia));
 
   return (
-    data.getUTCFullYear() === ano &&
-    data.getUTCMonth() === mes - 1 &&
-    data.getUTCDate() === dia
+    data.getUTCFullYear() === ano && data.getUTCMonth() === mes - 1 && data.getUTCDate() === dia
   );
 }
 
@@ -34,14 +32,9 @@ export const schemaNicknameAluno = z
   .trim()
   .transform((nickname) => nickname.toLowerCase())
   .pipe(
-    z
-      .string()
-      .min(TAMANHO_MINIMO_NICKNAME)
-      .max(TAMANHO_MAXIMO_NICKNAME)
-      .regex(FORMATO_NICKNAME, {
-        message:
-          "Nickname deve comecar com letra e conter apenas letras minusculas, numeros e _.",
-      }),
+    z.string().min(TAMANHO_MINIMO_NICKNAME).max(TAMANHO_MAXIMO_NICKNAME).regex(FORMATO_NICKNAME, {
+      message: "Nickname deve comecar com letra e conter apenas letras minusculas, numeros e _.",
+    }),
   );
 
 export const schemaDisponibilidadeNicknameAluno = z.object({
@@ -52,7 +45,12 @@ export const schemaRegistrarAluno = z
   .object({
     nome: textoObrigatorio(120),
     nickname: schemaNicknameAluno,
-    email: z.string().trim().max(255).pipe(z.email()).transform((email) => email.toLowerCase()),
+    email: z
+      .string()
+      .trim()
+      .max(255)
+      .pipe(z.email())
+      .transform((email) => email.toLowerCase()),
     senha: z.string().min(8),
     confirmacaoSenha: z.string().min(8),
     instituicao: textoObrigatorio(160),

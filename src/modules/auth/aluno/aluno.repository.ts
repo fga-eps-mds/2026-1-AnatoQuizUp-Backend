@@ -1,10 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import { prisma } from "@/config/db";
-import {
-  VALOR_NAO_SE_APLICA,
-  type EscolaridadeAluno,
-} from "@/modules/auth/aluno/aluno.constants";
+import { VALOR_NAO_SE_APLICA, type EscolaridadeAluno } from "@/modules/auth/aluno/aluno.constants";
 import type { RegistroAluno } from "@/modules/auth/aluno/dto/resposta.aluno.types";
 import type { Papel, StatusUsuario } from "@/shared/constants/papeis";
 
@@ -25,10 +22,7 @@ export type CriarAlunoData = {
   status: StatusUsuario;
 };
 
-type NivelEducacional =
-  | EscolaridadeAluno
-  | "MESTRADO"
-  | "DOUTORADO";
+type NivelEducacional = EscolaridadeAluno | "MESTRADO" | "DOUTORADO";
 
 type AlunoPorEmail = {
   id: string;
