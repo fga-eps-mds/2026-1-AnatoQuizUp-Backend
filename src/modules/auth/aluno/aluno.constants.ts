@@ -1,5 +1,9 @@
 export const VALOR_NAO_SE_APLICA = "Não se aplica";
 
+export const TAMANHO_MINIMO_NICKNAME = 3;
+export const TAMANHO_MAXIMO_NICKNAME = 20;
+export const FORMATO_NICKNAME = /^[a-z][a-z0-9_]*$/;
+
 export const ESTADOS_BRASILEIROS = [
   "AC",
   "AL",

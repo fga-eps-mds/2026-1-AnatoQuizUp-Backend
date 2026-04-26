@@ -43,6 +43,7 @@ enum NivelEducacional {
 model Usuario {
   id    String @id @default(cuid())
   nome  String
+  nickname String? @unique
   email String @unique
   senha String
 

@@ -3,6 +3,9 @@ import { z } from "zod";
 import {
   ESCOLARIDADES_ALUNO,
   ESTADOS_BRASILEIROS,
+  FORMATO_NICKNAME,
+  TAMANHO_MAXIMO_NICKNAME,
+  TAMANHO_MINIMO_NICKNAME,
 } from "@/modules/auth/aluno/aluno.constants";
 
 const FORMATO_DATA_ISO = /^\d{4}-\d{2}-\d{2}$/;
@@ -26,10 +29,30 @@ function dataIsoValida(valor: string) {
   );
 }
 
+export const schemaNicknameAluno = z
+  .string()
+  .trim()
+  .transform((nickname) => nickname.toLowerCase())
+  .pipe(
+    z
+      .string()
+      .min(TAMANHO_MINIMO_NICKNAME)
+      .max(TAMANHO_MAXIMO_NICKNAME)
+      .regex(FORMATO_NICKNAME, {
+        message:
+          "Nickname deve comecar com letra e conter apenas letras minusculas, numeros e _.",
+      }),
+  );
+
+export const schemaDisponibilidadeNicknameAluno = z.object({
+  nickname: schemaNicknameAluno,
+});
+
 export const schemaRegistrarAluno = z
   .object({
     nome: textoObrigatorio(120),
-    email: z.string().trim().email().max(255).transform((email) => email.toLowerCase()),
+    nickname: schemaNicknameAluno,
+    email: z.string().trim().max(255).pipe(z.email()).transform((email) => email.toLowerCase()),
     senha: z.string().min(8),
     confirmacaoSenha: z.string().min(8),
     instituicao: textoObrigatorio(160),

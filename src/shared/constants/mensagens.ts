@@ -8,6 +8,8 @@ export const MENSAGENS = {
   exemploEncontrado: "Exemplo encontrado com sucesso.",
   usuarioCadastrado: "Usuario cadastrado com sucesso.",
   emailJaCadastrado: "Ja existe um usuario cadastrado com este email.",
+  nicknameJaCadastrado: "Ja existe um usuario cadastrado com este nickname.",
+  nicknameDisponivel: "Nickname disponivel para uso.",
   autenticacaoNaoImplementada: "O middleware de autenticacao ainda nao foi implementado.",
   permissaoPorPapelNaoImplementada:
     "O middleware de permissao por papel ainda nao foi implementado.",
