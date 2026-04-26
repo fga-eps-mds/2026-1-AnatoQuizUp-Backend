@@ -3,13 +3,12 @@ name: Bug Report
 about: Reportar um erro no sistema
 title: "[BUG] "
 labels: bug
-assignees: ''
+assignees: ""
 ---
 
 ## Descrição do Problema
 
 Descreva claramente o bug.
-
 
 ## Passos para Reproduzir
 
@@ -17,16 +16,13 @@ Descreva claramente o bug.
 2. Clicar em...
 3. Observar erro
 
-
 ## Comportamento Esperado
 
 Descreva o comportamento correto.
 
-
 ## Comportamento Atual
 
 O que está acontecendo de errado?
-
 
 ## Evidências
 
@@ -34,13 +30,11 @@ O que está acontecendo de errado?
 - Logs
 - Vídeos
 
-
 ## Ambiente
 
 - Dispositivo:
 - Navegador:
 - Versão do sistema:
-
 
 ## Issue Relacionada
 
