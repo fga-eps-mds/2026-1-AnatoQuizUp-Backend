@@ -1,53 +1,56 @@
 import jwt, { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
 
-import type { AuthPayload } from "../types/auth.types";
+import type { PayloadAutenticacao } from "../types/autenticacao.types";
 import { jwtSecretKey, jwtRefreshSecretKey } from "../../config/env";
 import { ErroAplicacao } from "../errors/erro-aplicacao";
 
-export const verifyJwtToken = (token: string, secret: string = jwtSecretKey) => {
+export const verificarTokenJwt = (token: string, segredo: string = jwtSecretKey) => {
   try {
-    const payload: AuthPayload = jwt.verify(token, secret) as AuthPayload;
+    const payload: PayloadAutenticacao = jwt.verify(token, segredo) as PayloadAutenticacao;
     return payload;
-  } catch (error: unknown) {
-    if (error instanceof TokenExpiredError) {
+  } catch (erro: unknown) {
+    if (erro instanceof TokenExpiredError) {
       throw new ErroAplicacao({
         mensagem: "Token expirado",
         codigo: "TOKEN_EXPIRADO",
         codigoStatus: 401,
-        detalhes: error,
+        detalhes: erro,
       });
-    } else if (error instanceof JsonWebTokenError) {
+    } else if (erro instanceof JsonWebTokenError) {
       throw new ErroAplicacao({
         mensagem: "Token inválido",
         codigo: "TOKEN_INVALIDO",
         codigoStatus: 401,
-        detalhes: error,
+        detalhes: erro,
       });
     } else {
       throw new ErroAplicacao({
         mensagem: "Falha na verificação do token",
         codigo: "VERIFICACAO_TOKEN_FALHOU",
         codigoStatus: 401,
-        detalhes: error,
+        detalhes: erro,
       });
     }
   }
 };
 
-export const generateAccessToken = (payload: AuthPayload, secret: string = jwtSecretKey) => {
-  return jwt.sign(payload, secret, { expiresIn: "1h" });
+export const gerarTokenDeAcesso = (
+  payload: PayloadAutenticacao,
+  segredo: string = jwtSecretKey,
+) => {
+  return jwt.sign(payload, segredo, { expiresIn: "1h" });
 };
 
-export const generateRefreshToken = (
-  payload: AuthPayload,
-  secret: string = jwtRefreshSecretKey,
+export const gerarRefreshToken = (
+  payload: PayloadAutenticacao,
+  segredo: string = jwtRefreshSecretKey,
 ) => {
-  return jwt.sign(payload, secret, { expiresIn: "7 days" });
+  return jwt.sign(payload, segredo, { expiresIn: "7 days" });
 };
 
-export const generatePasswordRedefinitionToken = (
-  payload: AuthPayload,
-  secret: string = jwtSecretKey,
+export const gerarTokenDeRedefinicaoDeSenha = (
+  payload: PayloadAutenticacao,
+  segredo: string = jwtSecretKey,
 ) => {
-  return jwt.sign(payload, secret, { expiresIn: "15m" });
+  return jwt.sign(payload, segredo, { expiresIn: "15m" });
 };
