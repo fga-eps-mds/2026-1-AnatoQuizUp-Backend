@@ -6,6 +6,4 @@ import type {
 } from "@/modules/auth/aluno/aluno.schemas";
 
 export type RegistrarAlunoDto = z.infer<typeof schemaRegistrarAluno>;
-export type DisponibilidadeNicknameAlunoDto = z.infer<
-  typeof schemaDisponibilidadeNicknameAluno
->;
+export type DisponibilidadeNicknameAlunoDto = z.infer<typeof schemaDisponibilidadeNicknameAluno>;
