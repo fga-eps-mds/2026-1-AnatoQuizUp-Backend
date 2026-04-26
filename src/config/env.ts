@@ -10,6 +10,9 @@ const envSchema = z.object({
   LOG_LEVEL: z
     .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
     .default("info"),
+  BREVO_API_KEY: z.string().min(1, "BREVO_API_KEY is required."),
+  EMAIL_FROM: z.string().email("EMAIL_FROM must be a valid email."),
+  FRONTEND_PROD_URL: z.string().url("FRONTEND_PROD_URL must be a valid URL."),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
