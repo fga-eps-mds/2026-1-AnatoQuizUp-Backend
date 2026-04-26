@@ -15,12 +15,9 @@ const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 10;
 const MAX_LIMIT = 100;
 
-export function resolverParametrosPaginacao(
-  input: EntradaPaginacao,
-): ParametrosPaginacao {
+export function resolverParametrosPaginacao(input: EntradaPaginacao): ParametrosPaginacao {
   const pagina = input.page && input.page > 0 ? input.page : DEFAULT_PAGE;
-  const limite =
-    input.limit && input.limit > 0 ? Math.min(input.limit, MAX_LIMIT) : DEFAULT_LIMIT;
+  const limite = input.limit && input.limit > 0 ? Math.min(input.limit, MAX_LIMIT) : DEFAULT_LIMIT;
 
   return {
     page: pagina,
