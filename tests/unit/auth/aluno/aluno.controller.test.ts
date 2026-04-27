@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { AlunoAuthController } from "@/modules/auth/aluno/aluno.controller";
 import type { AlunoAuthService } from "@/modules/auth/aluno/aluno.service";
 import type {
+  DisponibilidadeEmailAlunoDto,
   DisponibilidadeNicknameAlunoDto,
   RegistrarAlunoDto,
 } from "@/modules/auth/aluno/dto/registrar.aluno.types";
@@ -95,6 +96,36 @@ describe("AlunoAuthController", () => {
     expect(status).toHaveBeenCalledWith(200);
     expect(json).toHaveBeenCalledWith({
       mensagem: MENSAGENS.nicknameDisponivel,
+      dados: disponibilidade,
+    });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("retorna 200 com disponibilidade do email", async () => {
+    const disponibilidade = {
+      email: "joao.junior@aluno.unb.br",
+      disponivel: true,
+    };
+    const verificarEmailDisponivel = vi
+      .fn<AlunoAuthService["verificarEmailDisponivel"]>()
+      .mockResolvedValue(disponibilidade);
+    const controller = new AlunoAuthController({
+      verificarEmailDisponivel,
+    } as unknown as AlunoAuthService);
+    const request = {
+      query: { email: "joao.junior@aluno.unb.br" },
+    } as Request<unknown, unknown, unknown, DisponibilidadeEmailAlunoDto>;
+    const json = vi.fn();
+    const status = vi.fn(() => ({ json }));
+    const response = { status } as unknown as Response<RespostaApiSucesso<typeof disponibilidade>>;
+    const next = vi.fn();
+
+    await controller.verificarEmailDisponivel(request, response, next);
+
+    expect(verificarEmailDisponivel).toHaveBeenCalledWith({ email: "joao.junior@aluno.unb.br" });
+    expect(status).toHaveBeenCalledWith(200);
+    expect(json).toHaveBeenCalledWith({
+      mensagem: MENSAGENS.emailDisponivel,
       dados: disponibilidade,
     });
     expect(next).not.toHaveBeenCalled();

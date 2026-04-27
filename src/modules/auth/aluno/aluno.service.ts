@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 
 import type { AlunoAuthRepository } from "@/modules/auth/aluno/aluno.repository";
 import type {
+  DisponibilidadeEmailAlunoDto,
   DisponibilidadeNicknameAlunoDto,
   RegistrarAlunoDto,
 } from "@/modules/auth/aluno/dto/registrar.aluno.types";
@@ -27,6 +28,10 @@ function converterDataNascimento(value: string) {
 }
 
 function normalizarNickname(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function normalizarEmail(value: string) {
   return value.trim().toLowerCase();
 }
 
@@ -60,6 +65,11 @@ export type RespostaDisponibilidadeNicknameDto = {
   disponivel: boolean;
 };
 
+export type RespostaDisponibilidadeEmailDto = {
+  email: string;
+  disponivel: boolean;
+};
+
 export class AlunoAuthService {
   constructor(private readonly alunoAuthRepository: AlunoAuthRepository) {}
 
@@ -75,8 +85,20 @@ export class AlunoAuthService {
     };
   }
 
+  async verificarEmailDisponivel(
+    input: DisponibilidadeEmailAlunoDto,
+  ): Promise<RespostaDisponibilidadeEmailDto> {
+    const email = normalizarEmail(input.email);
+    const alunoExistente = await this.alunoAuthRepository.buscarPorEmail(email);
+
+    return {
+      email,
+      disponivel: !alunoExistente,
+    };
+  }
+
   async registrar(input: RegistrarAlunoDto): Promise<RespostaAlunoDto> {
-    const email = input.email.trim().toLowerCase();
+    const email = normalizarEmail(input.email);
     const nickname = normalizarNickname(input.nickname);
     const alunoExistente = await this.alunoAuthRepository.buscarPorEmail(email);
 
