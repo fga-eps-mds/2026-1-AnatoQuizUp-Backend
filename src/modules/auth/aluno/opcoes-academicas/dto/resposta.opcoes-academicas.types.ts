@@ -5,4 +5,3 @@ export type OpcoesAcademicasAlunoDto = {
   periodos: string[];
   naoSeAplica: string;
 };
-

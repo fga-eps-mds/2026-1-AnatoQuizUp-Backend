@@ -50,4 +50,3 @@ export const PERIODOS_ALUNO_OPCOES = [
 ] as const;
 
 export type EscolaridadeAluno = (typeof ESCOLARIDADES_ALUNO)[number];
-

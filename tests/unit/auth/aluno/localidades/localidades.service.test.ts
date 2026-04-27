@@ -1,4 +1,3 @@
-
 import { AlunoLocalidadesService } from "@/modules/auth/aluno/localidades/localidades.service";
 
 describe("AlunoLocalidadesService", () => {
