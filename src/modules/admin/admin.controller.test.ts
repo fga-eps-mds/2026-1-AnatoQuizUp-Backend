@@ -13,6 +13,7 @@ function criarUsuarioResposta(overrides: Partial<RespostaUserDto> = {}): Respost
   return {
     id: "user-1",
     nome: "Maria",
+    nickname: "maria",
     email: "maria@example.com",
     perfil: "ALUNO",
     status: "ATIVO",

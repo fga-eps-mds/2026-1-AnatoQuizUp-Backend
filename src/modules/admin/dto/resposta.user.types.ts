@@ -6,12 +6,13 @@ import { converterParaIsoString } from "@/shared/utils/dados.util";
 export type RespostaUserDto = {
   id: string;
   nome: string;
+  nickname: Nullable<string>;
   email: string;
   perfil: Usuario["perfil"];
   status: Usuario["status"];
   instituicao: Nullable<string>;
   curso: Nullable<string>;
-  semestre: Nullable<number>;
+  semestre: Nullable<string>;
   estado: Nullable<string>;
   cidade: Nullable<string>;
   nacionalidade: Nullable<string>;
@@ -32,6 +33,7 @@ export function converterParaRespostaUser(
   return {
     id: usuario.id,
     nome: usuario.nome,
+    nickname: usuario.nickname,
     email: usuario.email,
     perfil: usuario.perfil,
     status: usuario.status,
