@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import jwt, { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
 
 import type { PayloadAutenticacao } from "../types/autenticacao.types";
@@ -45,7 +46,7 @@ export const gerarRefreshToken = (
   payload: PayloadAutenticacao,
   segredo: string = jwtRefreshSecretKey,
 ) => {
-  return jwt.sign(payload, segredo, { expiresIn: "7 days" });
+  return jwt.sign(payload, segredo, { expiresIn: "7 days", jwtid: randomUUID() });
 };
 
 export const gerarTokenDeRedefinicaoDeSenha = (

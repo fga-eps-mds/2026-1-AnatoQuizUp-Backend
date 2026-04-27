@@ -3,12 +3,14 @@ import jwt from "jsonwebtoken";
 import type { JwtPayload } from "jsonwebtoken";
 
 import type { SessaoRepository, UsuarioSessao } from "@/modules/auth/sessao/sessao.repository";
+import { jwtRefreshSecretKey } from "@/config/env";
 import { SessaoService } from "@/modules/auth/sessao/sessao.service";
 import { MENSAGENS } from "@/shared/constants/mensagens";
 import { PAPEIS } from "@/shared/constants/papeis";
 import { STATUS } from "@/shared/constants/status";
 import { CodigoDeErro } from "@/shared/errors/codigos-de-erro";
 import type { PayloadAutenticacao } from "@/shared/types/autenticacao.types";
+import { gerarRefreshToken } from "@/shared/utils/jwt";
 
 function criarUsuarioSessao(overrides: Partial<UsuarioSessao> = {}): UsuarioSessao {
   return {
@@ -49,16 +51,35 @@ function criarSessaoRepositoryMock(usuario: UsuarioSessao | null = criarUsuarioS
   const salvarRefreshToken = jest
     .fn<SessaoRepository["salvarRefreshToken"]>()
     .mockResolvedValue(undefined);
+  const buscarRefreshToken = jest
+    .fn<SessaoRepository["buscarRefreshToken"]>()
+    .mockResolvedValue(null);
+  const rotacionarRefreshToken = jest
+    .fn<SessaoRepository["rotacionarRefreshToken"]>()
+    .mockResolvedValue(true);
 
   return {
     sessaoRepository: {
       buscarUsuarioPorEmail,
       buscarUsuarioPorId,
       salvarRefreshToken,
+      buscarRefreshToken,
+      rotacionarRefreshToken,
     } as unknown as SessaoRepository,
     buscarUsuarioPorEmail,
     buscarUsuarioPorId,
     salvarRefreshToken,
+    buscarRefreshToken,
+    rotacionarRefreshToken,
+  };
+}
+
+function criarPayloadAutenticacao(): PayloadAutenticacao {
+  return {
+    id: "usuario-id",
+    email: "joao@aluno.unb.br",
+    papel: PAPEIS.ALUNO,
+    status: STATUS.ATIVO,
   };
 }
 
@@ -125,6 +146,131 @@ describe("SessaoService", () => {
     });
     expect(resposta.usuario).not.toHaveProperty("senha");
     expect(resposta.usuario).not.toHaveProperty("senhaHash");
+  });
+
+  it("renova sessao com refresh token valido, gera novos tokens e rotaciona token antigo", async () => {
+    const payload = criarPayloadAutenticacao();
+    const refreshTokenAtual = gerarRefreshToken(payload);
+    const {
+      sessaoRepository,
+      buscarRefreshToken,
+      buscarUsuarioPorId,
+      rotacionarRefreshToken,
+    } = criarSessaoRepositoryMock();
+    buscarRefreshToken.mockResolvedValueOnce({
+      token: refreshTokenAtual,
+      usuarioId: "usuario-id",
+      expiraEm: new Date(Date.now() + 60 * 60 * 1000),
+      revogadoEm: null,
+    });
+    const service = new SessaoService(sessaoRepository);
+
+    const resposta = await service.renovarSessao({ refreshToken: refreshTokenAtual });
+
+    expect(buscarRefreshToken).toHaveBeenCalledWith(refreshTokenAtual);
+    expect(buscarUsuarioPorId).toHaveBeenCalledWith("usuario-id");
+    expect(resposta.accessToken).toEqual(expect.any(String));
+    expect(resposta.refreshToken).toEqual(expect.any(String));
+    expect(resposta.refreshToken).not.toBe(refreshTokenAtual);
+    expect(rotacionarRefreshToken).toHaveBeenCalledWith(
+      refreshTokenAtual,
+      "usuario-id",
+      resposta.refreshToken,
+      expect.any(Date),
+    );
+  });
+
+  it("retorna 401 ao renovar sessao com refresh token expirado", async () => {
+    const refreshTokenExpirado = jwt.sign(criarPayloadAutenticacao(), jwtRefreshSecretKey, {
+      expiresIn: "-1s",
+    });
+    const { sessaoRepository, buscarRefreshToken, rotacionarRefreshToken } =
+      criarSessaoRepositoryMock();
+    const service = new SessaoService(sessaoRepository);
+
+    await expect(
+      service.renovarSessao({ refreshToken: refreshTokenExpirado }),
+    ).rejects.toMatchObject({
+      codigoStatus: 401,
+      codigo: CodigoDeErro.TOKEN_EXPIRADO,
+    });
+    expect(buscarRefreshToken).not.toHaveBeenCalled();
+    expect(rotacionarRefreshToken).not.toHaveBeenCalled();
+  });
+
+  it("retorna 401 ao renovar sessao com refresh token ja revogado", async () => {
+    const refreshTokenAtual = gerarRefreshToken(criarPayloadAutenticacao());
+    const { sessaoRepository, buscarRefreshToken, rotacionarRefreshToken } =
+      criarSessaoRepositoryMock();
+    buscarRefreshToken.mockResolvedValueOnce({
+      token: refreshTokenAtual,
+      usuarioId: "usuario-id",
+      expiraEm: new Date(Date.now() + 60 * 60 * 1000),
+      revogadoEm: new Date("2026-04-26T12:00:00.000Z"),
+    });
+    const service = new SessaoService(sessaoRepository);
+
+    await expect(service.renovarSessao({ refreshToken: refreshTokenAtual })).rejects.toMatchObject({
+      codigoStatus: 401,
+      codigo: CodigoDeErro.TOKEN_INVALIDO,
+      message: MENSAGENS.tokenInvalido,
+    });
+    expect(rotacionarRefreshToken).not.toHaveBeenCalled();
+  });
+
+  it("retorna 401 ao renovar sessao com refresh token nao encontrado no banco", async () => {
+    const refreshTokenAtual = gerarRefreshToken(criarPayloadAutenticacao());
+    const { sessaoRepository, buscarRefreshToken, rotacionarRefreshToken } =
+      criarSessaoRepositoryMock();
+    buscarRefreshToken.mockResolvedValueOnce(null);
+    const service = new SessaoService(sessaoRepository);
+
+    await expect(service.renovarSessao({ refreshToken: refreshTokenAtual })).rejects.toMatchObject({
+      codigoStatus: 401,
+      codigo: CodigoDeErro.TOKEN_INVALIDO,
+      message: MENSAGENS.tokenInvalido,
+    });
+    expect(rotacionarRefreshToken).not.toHaveBeenCalled();
+  });
+
+  it("retorna 401 ao renovar sessao com refresh token expirado no banco", async () => {
+    const refreshTokenAtual = gerarRefreshToken(criarPayloadAutenticacao());
+    const { sessaoRepository, buscarRefreshToken, rotacionarRefreshToken } =
+      criarSessaoRepositoryMock();
+    buscarRefreshToken.mockResolvedValueOnce({
+      token: refreshTokenAtual,
+      usuarioId: "usuario-id",
+      expiraEm: new Date(Date.now() - 1000),
+      revogadoEm: null,
+    });
+    const service = new SessaoService(sessaoRepository);
+
+    await expect(service.renovarSessao({ refreshToken: refreshTokenAtual })).rejects.toMatchObject({
+      codigoStatus: 401,
+      codigo: CodigoDeErro.TOKEN_INVALIDO,
+      message: MENSAGENS.tokenInvalido,
+    });
+    expect(rotacionarRefreshToken).not.toHaveBeenCalled();
+  });
+
+  it("retorna 401 quando refresh token ja foi rotacionado por outra requisicao", async () => {
+    const refreshTokenAtual = gerarRefreshToken(criarPayloadAutenticacao());
+    const { sessaoRepository, buscarRefreshToken, rotacionarRefreshToken } =
+      criarSessaoRepositoryMock();
+    buscarRefreshToken.mockResolvedValueOnce({
+      token: refreshTokenAtual,
+      usuarioId: "usuario-id",
+      expiraEm: new Date(Date.now() + 60 * 60 * 1000),
+      revogadoEm: null,
+    });
+    rotacionarRefreshToken.mockResolvedValueOnce(false);
+    const service = new SessaoService(sessaoRepository);
+
+    await expect(service.renovarSessao({ refreshToken: refreshTokenAtual })).rejects.toMatchObject({
+      codigoStatus: 401,
+      codigo: CodigoDeErro.TOKEN_INVALIDO,
+      message: MENSAGENS.tokenInvalido,
+    });
   });
 
   it("retorna 401 ao buscar usuario autenticado inexistente", async () => {

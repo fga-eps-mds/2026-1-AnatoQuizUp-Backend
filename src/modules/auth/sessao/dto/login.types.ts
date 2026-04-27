@@ -1,10 +1,11 @@
 import type { z } from "zod";
 
-import type { schemaLogin } from "@/modules/auth/sessao/sessao.schemas";
+import type { schemaLogin, schemaRefreshToken } from "@/modules/auth/sessao/sessao.schemas";
 import type { Papel } from "@/shared/constants/papeis";
 import type { Status } from "@/shared/constants/status";
 
 export type LoginDto = z.infer<typeof schemaLogin>;
+export type RefreshTokenDto = z.infer<typeof schemaRefreshToken>;
 
 export type UsuarioSessaoDto = {
   id: string;
@@ -34,6 +35,8 @@ export type RespostaLoginDto = {
   accessToken: string;
   refreshToken: string;
 };
+
+export type RespostaRenovarSessaoDto = RespostaLoginDto;
 
 export type RespostaUsuarioAutenticadoDto = {
   usuario: UsuarioSessaoDto;

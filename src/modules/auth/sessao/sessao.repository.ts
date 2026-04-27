@@ -34,6 +34,13 @@ export type UsuarioSessao = {
   updatedAt: Date;
 };
 
+export type RefreshTokenSessao = {
+  token: string;
+  usuarioId: string;
+  expiraEm: Date;
+  revogadoEm: Date | null;
+};
+
 type UsuarioSessaoBanco = {
   id: string;
   nome: string;
@@ -57,6 +64,13 @@ type UsuarioSessaoBanco = {
   aprovadoEm: Date | null;
   criadoEm: Date;
   atualizadoEm: Date;
+};
+
+type RefreshTokenSessaoBanco = {
+  token: string;
+  usuarioId: string;
+  expiraEm: Date;
+  revogadoEm: Date | null;
 };
 
 function converterPerfilParaPapel(perfil: PerfilBanco): Papel {
@@ -186,5 +200,59 @@ export class SessaoRepository {
         NOW()
       )
     `;
+  }
+
+  async buscarRefreshToken(token: string): Promise<RefreshTokenSessao | null> {
+    const registros = await prisma.$queryRaw<RefreshTokenSessaoBanco[]>`
+      SELECT
+        token,
+        "usuarioId",
+        "expiraEm",
+        "revogadoEm"
+      FROM refresh_tokens
+      WHERE token = ${token}
+      LIMIT 1
+    `;
+
+    return registros[0] ?? null;
+  }
+
+  async rotacionarRefreshToken(
+    tokenAntigo: string,
+    usuarioId: string,
+    novoToken: string,
+    novoTokenExpiraEm: Date,
+  ): Promise<boolean> {
+    return prisma.$transaction(async (transacao) => {
+      const tokensRevogados = await transacao.$executeRaw`
+        UPDATE refresh_tokens
+        SET "revogadoEm" = NOW()
+        WHERE token = ${tokenAntigo}
+          AND "revogadoEm" IS NULL
+      `;
+
+      if (tokensRevogados === 0) {
+        return false;
+      }
+
+      await transacao.$executeRaw`
+        INSERT INTO refresh_tokens (
+          id,
+          token,
+          "usuarioId",
+          "expiraEm",
+          "criadoEm"
+        )
+        VALUES (
+          ${randomUUID()},
+          ${novoToken},
+          ${usuarioId},
+          ${novoTokenExpiraEm},
+          NOW()
+        )
+      `;
+
+      return true;
+    });
   }
 }
