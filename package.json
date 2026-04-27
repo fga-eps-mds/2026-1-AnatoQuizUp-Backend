@@ -8,7 +8,6 @@
     "dev": "tsx watch -r tsconfig-paths/register src/server.ts",
     "build": "tsc --project tsconfig.build.json && tsc-alias -p tsconfig.build.json",
     "start": "node dist/src/server.js",
-    "test": "jest",
     "lint": "eslint . --ext .ts",
     "test": "jest",
     "format": "prettier . --write",
