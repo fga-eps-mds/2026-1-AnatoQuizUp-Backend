@@ -9,10 +9,7 @@ jest.mock("@/config/db", () => ({
   },
 }));
 
-type QueryRawMock = <T = unknown>(
-  query: TemplateStringsArray,
-  ...values: unknown[]
-) => Promise<T>;
+type QueryRawMock = <T = unknown>(query: TemplateStringsArray, ...values: unknown[]) => Promise<T>;
 
 const queryRawMock = prisma.$queryRaw as unknown as jest.MockedFunction<QueryRawMock>;
 

@@ -1,4 +1,3 @@
-
 import { criarOpcoesCors, parseCorsOrigins } from "@/config/cors";
 
 type OriginCallback = (error: Error | null, allow?: boolean | string) => void;

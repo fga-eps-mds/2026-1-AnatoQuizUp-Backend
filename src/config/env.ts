@@ -28,9 +28,7 @@ const envSchema = z.object({
     "DATABASE_URL",
     "postgresql://postgres:postgres@localhost:5432/postgres?schema=public",
   ),
-  LOG_LEVEL: z
-    .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
-    .default("info"),
+  LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
   BREVO_API_KEY: variavelComDefaultDeTeste("BREVO_API_KEY", "test-brevo-api-key"),
   EMAIL_FROM: emailComDefaultDeTeste("EMAIL_FROM", "noreply@example.com"),
   FRONTEND_PROD_URL: urlComDefaultDeTeste("FRONTEND_PROD_URL", "https://example.com"),
