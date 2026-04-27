@@ -148,6 +148,39 @@ describe("SessaoService", () => {
     expect(resposta.usuario).not.toHaveProperty("senhaHash");
   });
 
+  it("retorna dados do usuario autenticado com campos opcionais nulos e aprovadoEm preenchido", async () => {
+    const { sessaoRepository } = criarSessaoRepositoryMock(
+      criarUsuarioSessao({
+        nickname: null,
+        instituicao: null,
+        curso: null,
+        periodo: null,
+        dataNascimento: null,
+        nacionalidade: null,
+        cidade: null,
+        estado: null,
+        escolaridade: null,
+        aprovadoEm: new Date("2026-04-26T12:00:00.000Z"),
+      }),
+    );
+    const service = new SessaoService(sessaoRepository);
+
+    const resposta = await service.obterUsuarioAutenticado("usuario-id");
+
+    expect(resposta.usuario).toMatchObject({
+      nickname: null,
+      instituicao: null,
+      curso: null,
+      periodo: null,
+      dataNascimento: null,
+      nacionalidade: null,
+      cidade: null,
+      estado: null,
+      escolaridade: null,
+      aprovadoEm: "2026-04-26T12:00:00.000Z",
+    });
+  });
+
   it("renova sessao com refresh token valido, gera novos tokens e rotaciona token antigo", async () => {
     const payload = criarPayloadAutenticacao();
     const refreshTokenAtual = gerarRefreshToken(payload);
@@ -273,11 +306,106 @@ describe("SessaoService", () => {
     });
   });
 
+  it("retorna 401 ao renovar sessao quando refresh token pertence a outro usuario", async () => {
+    const refreshTokenAtual = gerarRefreshToken(criarPayloadAutenticacao());
+    const { sessaoRepository, buscarRefreshToken, rotacionarRefreshToken } =
+      criarSessaoRepositoryMock();
+    buscarRefreshToken.mockResolvedValueOnce({
+      token: refreshTokenAtual,
+      usuarioId: "outro-usuario-id",
+      expiraEm: new Date(Date.now() + 60 * 60 * 1000),
+      revogadoEm: null,
+    });
+    const service = new SessaoService(sessaoRepository);
+
+    await expect(service.renovarSessao({ refreshToken: refreshTokenAtual })).rejects.toMatchObject({
+      codigoStatus: 401,
+      codigo: CodigoDeErro.TOKEN_INVALIDO,
+      message: MENSAGENS.tokenInvalido,
+    });
+    expect(rotacionarRefreshToken).not.toHaveBeenCalled();
+  });
+
+  it("retorna 401 ao renovar sessao quando usuario nao existe", async () => {
+    const refreshTokenAtual = gerarRefreshToken(criarPayloadAutenticacao());
+    const { sessaoRepository, buscarRefreshToken, rotacionarRefreshToken } =
+      criarSessaoRepositoryMock(null);
+    buscarRefreshToken.mockResolvedValueOnce({
+      token: refreshTokenAtual,
+      usuarioId: "usuario-id",
+      expiraEm: new Date(Date.now() + 60 * 60 * 1000),
+      revogadoEm: null,
+    });
+    const service = new SessaoService(sessaoRepository);
+
+    await expect(service.renovarSessao({ refreshToken: refreshTokenAtual })).rejects.toMatchObject({
+      codigoStatus: 401,
+      codigo: CodigoDeErro.TOKEN_INVALIDO,
+      message: MENSAGENS.tokenInvalido,
+    });
+    expect(rotacionarRefreshToken).not.toHaveBeenCalled();
+  });
+
+  it("retorna 401 ao renovar sessao quando usuario esta excluido logicamente", async () => {
+    const refreshTokenAtual = gerarRefreshToken(criarPayloadAutenticacao());
+    const { sessaoRepository, buscarRefreshToken, rotacionarRefreshToken } =
+      criarSessaoRepositoryMock(
+        criarUsuarioSessao({ excluidoEm: new Date("2026-04-26T12:00:00.000Z") }),
+      );
+    buscarRefreshToken.mockResolvedValueOnce({
+      token: refreshTokenAtual,
+      usuarioId: "usuario-id",
+      expiraEm: new Date(Date.now() + 60 * 60 * 1000),
+      revogadoEm: null,
+    });
+    const service = new SessaoService(sessaoRepository);
+
+    await expect(service.renovarSessao({ refreshToken: refreshTokenAtual })).rejects.toMatchObject({
+      codigoStatus: 401,
+      codigo: CodigoDeErro.TOKEN_INVALIDO,
+      message: MENSAGENS.tokenInvalido,
+    });
+    expect(rotacionarRefreshToken).not.toHaveBeenCalled();
+  });
+
+  it("retorna 403 ao renovar sessao quando usuario esta com status bloqueante", async () => {
+    const refreshTokenAtual = gerarRefreshToken(criarPayloadAutenticacao());
+    const { sessaoRepository, buscarRefreshToken, rotacionarRefreshToken } =
+      criarSessaoRepositoryMock(criarUsuarioSessao({ status: STATUS.INATIVO }));
+    buscarRefreshToken.mockResolvedValueOnce({
+      token: refreshTokenAtual,
+      usuarioId: "usuario-id",
+      expiraEm: new Date(Date.now() + 60 * 60 * 1000),
+      revogadoEm: null,
+    });
+    const service = new SessaoService(sessaoRepository);
+
+    await expect(service.renovarSessao({ refreshToken: refreshTokenAtual })).rejects.toMatchObject({
+      codigoStatus: 403,
+      codigo: CodigoDeErro.CONTA_DESATIVADA,
+      message: MENSAGENS.contaDesativada,
+    });
+    expect(rotacionarRefreshToken).not.toHaveBeenCalled();
+  });
+
   it("retorna 401 ao buscar usuario autenticado inexistente", async () => {
     const { sessaoRepository } = criarSessaoRepositoryMock(null);
     const service = new SessaoService(sessaoRepository);
 
     await expect(service.obterUsuarioAutenticado("usuario-inexistente")).rejects.toMatchObject({
+      codigoStatus: 401,
+      codigo: CodigoDeErro.TOKEN_INVALIDO,
+      message: MENSAGENS.tokenInvalido,
+    });
+  });
+
+  it("retorna 401 ao buscar usuario autenticado excluido logicamente", async () => {
+    const { sessaoRepository } = criarSessaoRepositoryMock(
+      criarUsuarioSessao({ excluidoEm: new Date("2026-04-26T12:00:00.000Z") }),
+    );
+    const service = new SessaoService(sessaoRepository);
+
+    await expect(service.obterUsuarioAutenticado("usuario-id")).rejects.toMatchObject({
       codigoStatus: 401,
       codigo: CodigoDeErro.TOKEN_INVALIDO,
       message: MENSAGENS.tokenInvalido,

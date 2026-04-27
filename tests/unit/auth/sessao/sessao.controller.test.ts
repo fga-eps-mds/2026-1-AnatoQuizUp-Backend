@@ -168,6 +168,30 @@ describe("SessaoController", () => {
     expect(next).toHaveBeenCalledWith(error);
   });
 
+  it("encaminha erro do service ao buscar usuario autenticado", async () => {
+    const error = new Error("erro");
+    const obterUsuarioAutenticado = jest
+      .fn<SessaoService["obterUsuarioAutenticado"]>()
+      .mockRejectedValue(error);
+    const controller = new SessaoController({
+      obterUsuarioAutenticado,
+    } as unknown as SessaoService);
+    const request = {
+      usuario: {
+        id: "usuario-id",
+        email: "joao@aluno.unb.br",
+        papel: PAPEIS.ALUNO,
+      },
+    } as Request;
+    const response = {} as Response<RespostaApiSucesso<RespostaUsuarioAutenticadoDto>>;
+    const next = jest.fn();
+
+    await controller.obterUsuarioAutenticado(request, response, next);
+
+    expect(obterUsuarioAutenticado).toHaveBeenCalledWith("usuario-id");
+    expect(next).toHaveBeenCalledWith(error);
+  });
+
   it("encaminha erro quando /me e chamado sem usuario autenticado", async () => {
     const obterUsuarioAutenticado = jest.fn<SessaoService["obterUsuarioAutenticado"]>();
     const controller = new SessaoController({
