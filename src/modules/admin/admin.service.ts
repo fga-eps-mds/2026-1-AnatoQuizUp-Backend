@@ -19,7 +19,7 @@ import {
   converterParaRespostaUser,
   type RespostaUserDto,
 } from "./dto/resposta.user.types";
-import { UserRepository } from "./admin.repository";
+import type { UserRepository } from "./admin.repository";
 
 export class AdminService {
   constructor(private readonly userRepository: UserRepository) {}

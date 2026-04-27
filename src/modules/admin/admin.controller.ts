@@ -9,7 +9,7 @@ import type {
 } from "./dto/alterar.status_user.types";
 import type { ListarUsersDto, ListarUsersQueryDto } from "./dto/listar.users.types";
 import type { RespostaUserDto } from "./dto/resposta.user.types";
-import { AdminService } from "./admin.service";
+import type { AdminService } from "./admin.service";
 
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}

@@ -1,7 +1,7 @@
 import type { Usuario } from "@prisma/client";
 
 import { MENSAGENS } from "@/shared/constants/mensagens";
-import { ErroAplicacao } from "@/shared/errors/erro-aplicacao";
+import type { ErroAplicacao } from "@/shared/errors/erro-aplicacao";
 
 import { AdminService } from "./admin.service";
 import type { UserRepository } from "./admin.repository";
