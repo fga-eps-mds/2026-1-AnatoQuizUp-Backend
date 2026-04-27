@@ -8,6 +8,7 @@ import { ErroAplicacao } from "@/shared/errors/erro-aplicacao";
 import { CodigoDeErro } from "@/shared/errors/codigos-de-erro";
 import { middlewareTratamentoErros } from "@/shared/middlewares/tratamento-erros.middleware";
 import { loggerHttp } from "@/config/logger";
+import { adminRouter } from "@/modules/admin/admin.routes";
 
 const aplicacao = express();
 const roteadorApi = Router();
@@ -28,6 +29,7 @@ aplicacao.get("/health", (_request, response) => {
 });
 
 roteadorApi.use("/exemplos", exemploRouter);
+roteadorApi.use("/admin", adminRouter);
 aplicacao.use("/api/v1", roteadorApi);
 
 aplicacao.use((_request, _response, next) => {
