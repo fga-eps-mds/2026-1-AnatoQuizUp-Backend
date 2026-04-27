@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { jwtRefreshSecretKey } from "@/config/env";
 import type {
   LoginDto,
+  LogoutDto,
   RefreshTokenDto,
   RespostaLoginDto,
   RespostaRenovarSessaoDto,
@@ -200,5 +201,24 @@ export class SessaoService {
       accessToken,
       refreshToken,
     };
+  }
+
+  async logout(usuarioId: string, input: LogoutDto): Promise<void> {
+    const refreshToken = input.refreshToken.trim();
+    const refreshTokenSalvo = await this.sessaoRepository.buscarRefreshToken(refreshToken);
+
+    if (
+      !refreshTokenSalvo ||
+      refreshTokenSalvo.revogadoEm ||
+      refreshTokenSalvo.usuarioId !== usuarioId
+    ) {
+      throw criarErroTokenInvalido();
+    }
+
+    const tokenRevogado = await this.sessaoRepository.revogarRefreshToken(refreshToken, usuarioId);
+
+    if (!tokenRevogado) {
+      throw criarErroTokenInvalido();
+    }
   }
 }

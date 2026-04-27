@@ -2,7 +2,11 @@ import { Router } from "express";
 
 import { SessaoController } from "@/modules/auth/sessao/sessao.controller";
 import { SessaoRepository } from "@/modules/auth/sessao/sessao.repository";
-import { schemaLogin, schemaRefreshToken } from "@/modules/auth/sessao/sessao.schemas";
+import {
+  schemaLogin,
+  schemaLogout,
+  schemaRefreshToken,
+} from "@/modules/auth/sessao/sessao.schemas";
 import { SessaoService } from "@/modules/auth/sessao/sessao.service";
 import { middlewareAutenticacao } from "@/shared/middlewares/autenticacao.middleware";
 import { validarRequisicao } from "@/shared/middlewares/validacao.middleware";
@@ -20,5 +24,11 @@ sessaoRouter.post(
   sessaoController.renovarSessao,
 );
 sessaoRouter.get("/me", middlewareAutenticacao, sessaoController.obterUsuarioAutenticado);
+sessaoRouter.post(
+  "/logout",
+  middlewareAutenticacao,
+  validarRequisicao(schemaLogout),
+  sessaoController.logout,
+);
 
 export { sessaoRouter };

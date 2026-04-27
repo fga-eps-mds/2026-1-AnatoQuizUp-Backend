@@ -1,11 +1,16 @@
 import type { z } from "zod";
 
-import type { schemaLogin, schemaRefreshToken } from "@/modules/auth/sessao/sessao.schemas";
+import type {
+  schemaLogin,
+  schemaLogout,
+  schemaRefreshToken,
+} from "@/modules/auth/sessao/sessao.schemas";
 import type { Papel } from "@/shared/constants/papeis";
 import type { Status } from "@/shared/constants/status";
 
 export type LoginDto = z.infer<typeof schemaLogin>;
 export type RefreshTokenDto = z.infer<typeof schemaRefreshToken>;
+export type LogoutDto = z.infer<typeof schemaLogout>;
 
 export type UsuarioSessaoDto = {
   id: string;
