@@ -30,12 +30,14 @@ export function validarRequisicao<T>(
       (request as Request & Record<AlvoValidacao, unknown>)[alvo] = validacao.data;
       return next();
     }
-    Object.defineProperty(request, alvo, {
-      value: validacao.data, 
-      writable: false,
-      configurable: false,
-      enumerable: true
-    })
+
+    const destino = request[alvo] as Record<string, unknown>;
+
+    for (const chave of Object.keys(destino)) {
+      delete destino[chave];
+    }
+
+    Object.assign(destino, validacao.data);
 
     return next();
   };
