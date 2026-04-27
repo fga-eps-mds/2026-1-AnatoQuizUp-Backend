@@ -2,7 +2,9 @@ import type { NextFunction, Request, Response } from "express";
 
 import type {
   LoginDto,
+  RefreshTokenDto,
   RespostaLoginDto,
+  RespostaRenovarSessaoDto,
   RespostaUsuarioAutenticadoDto,
 } from "@/modules/auth/sessao/dto/login.types";
 import type { SessaoService } from "@/modules/auth/sessao/sessao.service";
@@ -24,6 +26,23 @@ export class SessaoController {
 
       return response.status(200).json({
         mensagem: MENSAGENS.loginRealizado,
+        dados,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  renovarSessao = async (
+    request: Request<unknown, unknown, RefreshTokenDto>,
+    response: Response<RespostaApiSucesso<RespostaRenovarSessaoDto>>,
+    next: NextFunction,
+  ) => {
+    try {
+      const dados = await this.sessaoService.renovarSessao(request.body);
+
+      return response.status(200).json({
+        mensagem: MENSAGENS.sessaoRenovada,
         dados,
       });
     } catch (error) {
