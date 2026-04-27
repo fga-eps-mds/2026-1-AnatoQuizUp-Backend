@@ -255,4 +255,16 @@ export class SessaoRepository {
       return true;
     });
   }
+
+  async revogarRefreshToken(token: string, usuarioId: string): Promise<boolean> {
+    const tokensRevogados = await prisma.$executeRaw`
+      UPDATE refresh_tokens
+      SET "revogadoEm" = NOW()
+      WHERE token = ${token}
+        AND "usuarioId" = ${usuarioId}
+        AND "revogadoEm" IS NULL
+    `;
+
+    return tokensRevogados > 0;
+  }
 }
