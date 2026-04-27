@@ -6,9 +6,10 @@
   "main": "dist/src/server.js",
   "scripts": {
     "dev": "tsx watch -r tsconfig-paths/register src/server.ts",
-    "build": "tsc --project tsconfig.json && tsc-alias -p tsconfig.json",
+    "build": "tsc --project tsconfig.build.json && tsc-alias -p tsconfig.build.json",
     "start": "node dist/src/server.js",
     "lint": "eslint . --ext .ts",
+    "test": "jest",
     "format": "prettier . --write",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
@@ -61,6 +62,7 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^24.8.1",
     "babel-jest": "^30.3.0",
+    "babel-plugin-module-resolver": "^5.0.3",
     "eslint": "^9.38.0",
     "eslint-config-prettier": "^10.1.8",
     "jest": "^30.3.0",
@@ -72,17 +74,5 @@
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.1"
-  },
-  "jest": {
-    "coverageReporters": [
-      "text",
-      "lcov",
-      "json-summary"
-    ],
-    "collectCoverageFrom": [
-      "src/**/*.{js,jsx,ts,tsx}",
-      "!src/**/*.d.ts",
-      "!src/**/index.{js,ts}"
-    ]
   }
 }
