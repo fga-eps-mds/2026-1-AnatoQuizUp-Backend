@@ -10,6 +10,7 @@ import type { SessaoRepository, UsuarioSessao } from "@/modules/auth/sessao/sess
 import { MENSAGENS } from "@/shared/constants/mensagens";
 import { STATUS } from "@/shared/constants/status";
 import { CodigoDeErro } from "@/shared/errors/codigos-de-erro";
+import type { ValorCodigoDeErro } from "@/shared/errors/codigos-de-erro";
 import { ErroAplicacao } from "@/shared/errors/erro-aplicacao";
 import type { PayloadAutenticacao } from "@/shared/types/autenticacao.types";
 import { gerarRefreshToken, gerarTokenDeAcesso } from "@/shared/utils/jwt";
@@ -26,6 +27,14 @@ function criarErroNaoAutorizado(mensagem: string) {
   return new ErroAplicacao({
     codigoStatus: 401,
     codigo: CodigoDeErro.NAO_AUTORIZADO,
+    mensagem,
+  });
+}
+
+function criarErroAcessoProibido(codigo: ValorCodigoDeErro, mensagem: string) {
+  return new ErroAplicacao({
+    codigoStatus: 403,
+    codigo,
     mensagem,
   });
 }
@@ -84,15 +93,24 @@ export class SessaoService {
     }
 
     if (usuario.status === STATUS.PENDENTE) {
-      throw criarErroNaoAutorizado(MENSAGENS.cadastroEmAnalise);
+      throw criarErroAcessoProibido(
+        CodigoDeErro.CADASTRO_EM_ANALISE,
+        MENSAGENS.cadastroEmAnalise,
+      );
     }
 
     if (usuario.status === STATUS.INATIVO) {
-      throw criarErroNaoAutorizado(MENSAGENS.contaDesativada);
+      throw criarErroAcessoProibido(
+        CodigoDeErro.CONTA_DESATIVADA,
+        MENSAGENS.contaDesativada,
+      );
     }
 
     if (usuario.status === STATUS.RECUSADO) {
-      throw criarErroNaoAutorizado(MENSAGENS.cadastroRecusado);
+      throw criarErroAcessoProibido(
+        CodigoDeErro.CADASTRO_RECUSADO,
+        MENSAGENS.cadastroRecusado,
+      );
     }
 
     const payload: PayloadAutenticacao = {
