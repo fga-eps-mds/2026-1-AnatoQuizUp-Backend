@@ -10,6 +10,8 @@ FROM node:24-alpine AS build
 
 WORKDIR /app
 
+ENV DATABASE_URL="postgresql://postgres:postgres@localhost:5432/postgres?schema=public"
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
