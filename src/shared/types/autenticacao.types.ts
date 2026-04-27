@@ -7,3 +7,15 @@ export type PayloadAutenticacao = {
   papel: Papel;
   status: Status;
 };
+
+export type UsuarioAutenticado = {
+  id: string;
+  email: string;
+  papel: Papel;
+};
+
+export type UsuarioAutenticadoExpress = {
+  userId: string;
+  email: string;
+  role: Papel;
+};

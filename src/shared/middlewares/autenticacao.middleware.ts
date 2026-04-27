@@ -1,64 +1,158 @@
-import type { Response, Request, NextFunction } from "express";
+import type { NextFunction, Request, Response } from "express";
 
-import { verificarTokenJwt } from "../utils/jwt";
+import { prisma } from "@/config/db";
+import { PAPEIS } from "@/shared/constants/papeis";
+import type { Papel } from "@/shared/constants/papeis";
+import { STATUS } from "@/shared/constants/status";
+import { CodigoDeErro } from "@/shared/errors/codigos-de-erro";
 import { ErroAplicacao } from "@/shared/errors/erro-aplicacao";
-import type { PayloadAutenticacao } from "../types/autenticacao.types";
-import { STATUS } from "../constants/status";
+import type { PayloadAutenticacao } from "@/shared/types/autenticacao.types";
+import { verificarTokenJwt } from "@/shared/utils/jwt";
 
-export const middlewareAutenticacao = (
+const ROTAS_PUBLICAS = new Set([
+  "/autenticacao/cadastro",
+  "/autenticacao/esqueci-senha",
+  "/autenticacao/login",
+  "/autenticacao/redefinir-senha",
+  "/autenticacao/refresh",
+  "/cadastro",
+  "/esqueci-senha",
+  "/forgot-password",
+  "/login",
+  "/redefinir-senha",
+  "/refresh",
+  "/register",
+  "/reset-password",
+]);
+
+function normalizarCaminho(caminho: string | undefined): string {
+  if (!caminho) {
+    return "";
+  }
+
+  const caminhoSemQuery = caminho.split("?")[0] ?? "";
+
+  if (caminhoSemQuery.startsWith("/api/v1")) {
+    return caminhoSemQuery.slice("/api/v1".length) || "/";
+  }
+
+  return caminhoSemQuery;
+}
+
+function ehRotaPublica(request: Request): boolean {
+  const caminhos = [
+    normalizarCaminho(request.path),
+    normalizarCaminho(request.originalUrl),
+    normalizarCaminho(request.url),
+  ];
+
+  return caminhos.some((caminho) => ROTAS_PUBLICAS.has(caminho));
+}
+
+function converterPerfilParaPapel(perfil: string): Papel {
+  if (perfil === "ADMIN") {
+    return PAPEIS.ADMINISTRADOR;
+  }
+
+  return perfil as Papel;
+}
+
+function obterTokenDoCabecalho(request: Request): string {
+  const campoAuthorization = request.headers.authorization;
+
+  if (!campoAuthorization) {
+    throw new ErroAplicacao({
+      mensagem: "Token não fornecido",
+      codigo: CodigoDeErro.NENHUM_TOKEN_FORNECIDO,
+      codigoStatus: 401,
+    });
+  }
+
+  if (!campoAuthorization.startsWith("Bearer ")) {
+    throw new ErroAplicacao({
+      mensagem: "Token inválido",
+      codigo: CodigoDeErro.TOKEN_INVALIDO,
+      codigoStatus: 401,
+    });
+  }
+
+  return campoAuthorization.replace("Bearer ", "");
+}
+
+function validarStatusUsuario(status: string): void {
+  if (status === STATUS.ATIVO) {
+    return;
+  }
+
+  if (status === STATUS.PENDENTE) {
+    throw new ErroAplicacao({
+      mensagem: "Cadastro em análise",
+      codigo: CodigoDeErro.CADASTRO_EM_ANALISE,
+      codigoStatus: 403,
+    });
+  }
+
+  if (status === STATUS.INATIVO) {
+    throw new ErroAplicacao({
+      mensagem: "Conta desativada",
+      codigo: CodigoDeErro.CONTA_DESATIVADA,
+      codigoStatus: 403,
+    });
+  }
+
+  throw new ErroAplicacao({
+    mensagem: "Cadastro recusado",
+    codigo: CodigoDeErro.CADASTRO_RECUSADO,
+    codigoStatus: 403,
+  });
+}
+
+export async function middlewareAutenticacao(
   request: Request,
-  response: Response,
+  _response: Response,
   next: NextFunction,
-) => {
-
-  const rotas_publicas = ["/login", '/register', 'forgot-password', 'reset-password', 'refresh', '/'];
-  if (rotas_publicas.includes(request.path)) {
+) {
+  if (ehRotaPublica(request)) {
     return next();
   }
 
-  const campo_authorization: string | undefined = request.headers["authorization"];
-
-  if (!campo_authorization) {
-    throw new ErroAplicacao({
-      mensagem: "Nenhum token foi fornecido",
-      codigo: "NENHUM_TOKEN_FORNECIDO",
-      codigoStatus: 401,
-    });
-  }
-
-  if (!campo_authorization.startsWith("Bearer ")) {
-    throw new ErroAplicacao({
-      mensagem: "Token inválido",
-      codigo: "TOKEN_INVALIDO",
-      codigoStatus: 401,
-    });
-  }
-
-  const token: string = campo_authorization.replace("Bearer ", "");
-
+  const token = obterTokenDoCabecalho(request);
   const payload: PayloadAutenticacao = verificarTokenJwt(token);
 
-  if (payload.status != STATUS.ATIVO) {
-    if (payload.status == STATUS.INATIVO) {
-      throw new ErroAplicacao({
-        mensagem: "Conta desativada",
-        codigo: "CONTA_DESATIVADA",
-        codigoStatus: 403,
-      });
-    } else if (payload.status == STATUS.PENDENTE) {
-      throw new ErroAplicacao({
-        mensagem: "Cadastro em análise",
-        codigo: "CADASTRO_EM_ANALISE",
-        codigoStatus: 403,
-      });
-    } else {
-      throw new ErroAplicacao({
-        mensagem: "Cadastro recusado",
-        codigo: "CADASTRO_RECUSADO",
-        codigoStatus: 403,
-      });
-    }
+  const usuario = await prisma.usuario.findUnique({
+    where: { id: payload.id },
+    select: {
+      id: true,
+      email: true,
+      perfil: true,
+      status: true,
+      excluidoEm: true,
+    },
+  });
+
+  if (!usuario || usuario.excluidoEm) {
+    throw new ErroAplicacao({
+      mensagem: "Token inválido",
+      codigo: CodigoDeErro.TOKEN_INVALIDO,
+      codigoStatus: 401,
+    });
   }
 
-  next();
-};
+  validarStatusUsuario(usuario.status);
+
+  const papel = converterPerfilParaPapel(usuario.perfil);
+
+  request.usuario = {
+    id: usuario.id,
+    email: usuario.email,
+    papel,
+  };
+
+  request.user = {
+    userId: usuario.id,
+    email: usuario.email,
+    role: papel,
+  };
+
+  return next();
+}
