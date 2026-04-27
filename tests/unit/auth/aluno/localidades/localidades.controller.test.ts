@@ -59,4 +59,46 @@ describe("AlunoLocalidadesController", () => {
     });
     expect(next).not.toHaveBeenCalled();
   });
+
+  it("encaminha erro da listagem de estados para o middleware de erro", async () => {
+    const erro = new Error("falha ao listar estados");
+    const listarEstados = jest.fn<AlunoLocalidadesService["listarEstados"]>(() => {
+      throw erro;
+    });
+    const controller = new AlunoLocalidadesController({
+      listarEstados,
+    } as unknown as AlunoLocalidadesService);
+    const request = {} as Request;
+    const json = jest.fn();
+    const status = jest.fn(() => ({ json }));
+    const response = { status } as unknown as Response<RespostaApiSucesso<RespostaEstadoDto[]>>;
+    const next = jest.fn();
+
+    await controller.listarEstados(request, response, next);
+
+    expect(next).toHaveBeenCalledWith(erro);
+    expect(status).toHaveBeenCalledWith(200);
+    expect(json).not.toHaveBeenCalled();
+  });
+
+  it("encaminha erro da listagem de cidades para o middleware de erro", async () => {
+    const erro = new Error("falha ao listar cidades");
+    const listarCidadesPorUf = jest.fn<AlunoLocalidadesService["listarCidadesPorUf"]>(() => {
+      throw erro;
+    });
+    const controller = new AlunoLocalidadesController({
+      listarCidadesPorUf,
+    } as unknown as AlunoLocalidadesService);
+    const request = { params: { uf: "DF" } } as Request<BuscarCidadesPorUfDto>;
+    const json = jest.fn();
+    const status = jest.fn(() => ({ json }));
+    const response = { status } as unknown as Response<RespostaApiSucesso<RespostaCidadeDto[]>>;
+    const next = jest.fn();
+
+    await controller.listarCidadesPorUf(request, response, next);
+
+    expect(next).toHaveBeenCalledWith(erro);
+    expect(status).toHaveBeenCalledWith(200);
+    expect(json).not.toHaveBeenCalled();
+  });
 });
