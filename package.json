@@ -6,10 +6,11 @@
   "main": "dist/src/server.js",
   "scripts": {
     "dev": "tsx watch -r tsconfig-paths/register src/server.ts",
-    "build": "tsc --project tsconfig.json && tsc-alias -p tsconfig.json",
+    "build": "tsc --project tsconfig.build.json && tsc-alias -p tsconfig.build.json",
     "start": "node dist/src/server.js",
     "test": "jest",
     "lint": "eslint . --ext .ts",
+    "test": "jest",
     "format": "prettier . --write",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
@@ -38,6 +39,7 @@
   },
   "homepage": "https://github.com/fga-eps-mds/2026-1-AnatoQuizUp-API#readme",
   "dependencies": {
+    "@getbrevo/brevo": "^5.0.4",
     "@prisma/client": "^6.17.1",
     "@types/jsonwebtoken": "^9.0.10",
     "bcryptjs": "^3.0.3",
@@ -61,6 +63,7 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^24.8.1",
     "babel-jest": "^30.3.0",
+    "babel-plugin-module-resolver": "^5.0.3",
     "eslint": "^9.38.0",
     "eslint-config-prettier": "^10.1.8",
     "jest": "^30.3.0",
