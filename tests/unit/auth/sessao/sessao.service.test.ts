@@ -183,10 +183,10 @@ describe("SessaoService", () => {
   });
 
   it.each([
-    [STATUS.PENDENTE, MENSAGENS.cadastroEmAnalise],
-    [STATUS.INATIVO, MENSAGENS.contaDesativada],
-    [STATUS.RECUSADO, MENSAGENS.cadastroRecusado],
-  ])("retorna 401 quando status do usuario e %s", async (status, mensagem) => {
+    [STATUS.PENDENTE, CodigoDeErro.CADASTRO_EM_ANALISE, MENSAGENS.cadastroEmAnalise],
+    [STATUS.INATIVO, CodigoDeErro.CONTA_DESATIVADA, MENSAGENS.contaDesativada],
+    [STATUS.RECUSADO, CodigoDeErro.CADASTRO_RECUSADO, MENSAGENS.cadastroRecusado],
+  ])("retorna 403 quando status do usuario e %s", async (status, codigo, mensagem) => {
     const { sessaoRepository, salvarRefreshToken } = criarSessaoRepositoryMock(
       criarUsuarioSessao({ status }),
     );
@@ -195,8 +195,8 @@ describe("SessaoService", () => {
     await expect(
       service.login({ email: "joao@aluno.unb.br", senha: "senha1234" }),
     ).rejects.toMatchObject({
-      codigoStatus: 401,
-      codigo: CodigoDeErro.NAO_AUTORIZADO,
+      codigoStatus: 403,
+      codigo,
       message: mensagem,
     });
     expect(salvarRefreshToken).not.toHaveBeenCalled();
