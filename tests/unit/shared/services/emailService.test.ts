@@ -13,11 +13,6 @@ jest.mock("@getbrevo/brevo", () => ({
   sendTransacEmail: jest.fn(),
 }));
 
-jest.mock("node:fs", () => ({
-  existsSync: jest.fn(),
-  readFileSync: jest.fn(),
-}));
-
 jest.mock("@/config/logger", () => ({
   logger: {
     error: jest.fn(),
@@ -26,13 +21,9 @@ jest.mock("@/config/logger", () => ({
   },
 }));
 
-import { existsSync, readFileSync } from "node:fs";
-
 import { logger } from "@/config/logger";
 import { enviarEmailRedefinicaoSenha } from "@/shared/services/emailService";
 
-const existsSyncMock = existsSync as jest.MockedFunction<typeof existsSync>;
-const readFileSyncMock = readFileSync as jest.MockedFunction<typeof readFileSync>;
 const loggerMock = logger as jest.Mocked<typeof logger>;
 const { sendTransacEmail: mockSendTransacEmail } = jest.requireMock("@getbrevo/brevo") as {
   sendTransacEmail: jest.Mock;
@@ -43,8 +34,7 @@ describe("emailService", () => {
     jest.clearAllMocks();
   });
 
-  it("envia email de redefinicao de senha com template textual quando a logo nao existe", async () => {
-    existsSyncMock.mockReturnValue(false);
+  it("envia email de redefinicao de senha com template compacto e sem imagem embutida", async () => {
     mockSendTransacEmail.mockResolvedValue({ messageId: "message-id" });
 
     await enviarEmailRedefinicaoSenha(
@@ -64,10 +54,10 @@ describe("emailService", () => {
         textContent: expect.stringContaining("Este link expira em 1 hora."),
       }),
     );
-    expect(loggerMock.warn).toHaveBeenCalledWith(
-      expect.objectContaining({ caminhoLogo: expect.any(String) }),
-      "Logo de email nao encontrada. Template usara cabecalho textual.",
-    );
+    const payload = mockSendTransacEmail.mock.calls[0]?.[0] as { htmlContent: string };
+
+    expect(payload.htmlContent).toContain("AnatoQuizUp");
+    expect(payload.htmlContent).not.toContain("data:image");
     expect(loggerMock.info).toHaveBeenCalledWith(
       {
         destinatario: "aluno@example.com",
@@ -77,26 +67,8 @@ describe("emailService", () => {
     );
   });
 
-  it("inclui logo embutida quando o arquivo existe", async () => {
-    existsSyncMock.mockReturnValue(true);
-    readFileSyncMock.mockReturnValue(Buffer.from("logo"));
-    mockSendTransacEmail.mockResolvedValue({ messageId: "message-id" });
-
-    await enviarEmailRedefinicaoSenha(
-      "aluno@example.com",
-      "https://app.example.com/reset-password?token=abc",
-    );
-
-    expect(mockSendTransacEmail).toHaveBeenCalledWith(
-      expect.objectContaining({
-        htmlContent: expect.stringContaining("data:image/png;base64,bG9nbw=="),
-      }),
-    );
-  });
-
   it("loga falha e propaga erro padronizado quando o provedor rejeita o envio", async () => {
     const erro = new Error("brevo indisponivel");
-    existsSyncMock.mockReturnValue(false);
     mockSendTransacEmail.mockRejectedValue(erro);
 
     await expect(
