@@ -7,7 +7,12 @@ const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().positive().default(3333),
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required."),
-  LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
+  LOG_LEVEL: z
+    .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
+    .default("info"),
+  BREVO_API_KEY: z.string().min(1, "BREVO_API_KEY is required."),
+  EMAIL_FROM: z.string().email("EMAIL_FROM must be a valid email."),
+  FRONTEND_PROD_URL: z.string().url("FRONTEND_PROD_URL must be a valid URL."),
   JWT_SECRET_KEY: z.string(),
   JWT_REFRESH_SECRET_KEY: z.string(),
   JWT_PASSWORD_REDEFINITION_SECRET_KEY: z.string(),
