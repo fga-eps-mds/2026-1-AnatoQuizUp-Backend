@@ -220,4 +220,33 @@ describe("AlunoAuthService", () => {
       },
     );
   });
+  it("verifica disponibilidade de email", async () => {
+    const { alunoAuthRepository, buscarPorEmail } = criarAlunoAuthRepositoryMock();
+    const service = new AlunoAuthService(alunoAuthRepository);
+
+    await expect(
+      service.verificarEmailDisponivel({ email: " JOAO.JUNIOR@ALUNO.UNB.BR " }),
+    ).resolves.toEqual({
+      email: "joao.junior@aluno.unb.br",
+      disponivel: true,
+    });
+
+    expect(buscarPorEmail).toHaveBeenCalledWith("joao.junior@aluno.unb.br");
+  });
+
+  it("indica email indisponivel quando ja existe", async () => {
+    const { alunoAuthRepository, buscarPorEmail } = criarAlunoAuthRepositoryMock();
+    buscarPorEmail.mockResolvedValue({
+      id: "usuario-existente",
+      email: "joao.junior@aluno.unb.br",
+    });
+    const service = new AlunoAuthService(alunoAuthRepository);
+
+    await expect(
+      service.verificarEmailDisponivel({ email: "joao.junior@aluno.unb.br" }),
+    ).resolves.toEqual({
+      email: "joao.junior@aluno.unb.br",
+      disponivel: false,
+    });
+  });
 });
