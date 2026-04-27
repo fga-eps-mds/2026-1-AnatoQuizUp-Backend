@@ -43,6 +43,9 @@ function criarSessaoRepositoryMock(usuario: UsuarioSessao | null = criarUsuarioS
   const buscarUsuarioPorEmail = jest
     .fn<SessaoRepository["buscarUsuarioPorEmail"]>()
     .mockResolvedValue(usuario);
+  const buscarUsuarioPorId = jest
+    .fn<SessaoRepository["buscarUsuarioPorId"]>()
+    .mockResolvedValue(usuario);
   const salvarRefreshToken = jest
     .fn<SessaoRepository["salvarRefreshToken"]>()
     .mockResolvedValue(undefined);
@@ -50,9 +53,11 @@ function criarSessaoRepositoryMock(usuario: UsuarioSessao | null = criarUsuarioS
   return {
     sessaoRepository: {
       buscarUsuarioPorEmail,
+      buscarUsuarioPorId,
       salvarRefreshToken,
     } as unknown as SessaoRepository,
     buscarUsuarioPorEmail,
+    buscarUsuarioPorId,
     salvarRefreshToken,
   };
 }
@@ -71,17 +76,7 @@ describe("SessaoService", () => {
     expect(buscarUsuarioPorEmail).toHaveBeenCalledWith("joao@aluno.unb.br");
     expect(resposta.accessToken).toEqual(expect.any(String));
     expect(resposta.refreshToken).toEqual(expect.any(String));
-    expect(resposta.usuario).toMatchObject({
-      id: "usuario-id",
-      nome: "Joao da Silva",
-      nickname: "joao_silva",
-      email: "joao@aluno.unb.br",
-      papel: PAPEIS.ALUNO,
-      status: STATUS.ATIVO,
-      dataNascimento: "2003-12-30",
-    });
-    expect(resposta.usuario).not.toHaveProperty("senha");
-    expect(resposta.usuario).not.toHaveProperty("senhaHash");
+    expect(resposta).not.toHaveProperty("usuario");
 
     const payloadAccess = jwt.decode(resposta.accessToken) as PayloadAutenticacao & JwtPayload;
     const payloadRefresh = jwt.decode(resposta.refreshToken) as PayloadAutenticacao & JwtPayload;
@@ -110,6 +105,37 @@ describe("SessaoService", () => {
       resposta.refreshToken,
       expect.any(Date),
     );
+  });
+
+  it("retorna dados do usuario autenticado", async () => {
+    const { sessaoRepository, buscarUsuarioPorId } = criarSessaoRepositoryMock();
+    const service = new SessaoService(sessaoRepository);
+
+    const resposta = await service.obterUsuarioAutenticado("usuario-id");
+
+    expect(buscarUsuarioPorId).toHaveBeenCalledWith("usuario-id");
+    expect(resposta.usuario).toMatchObject({
+      id: "usuario-id",
+      nome: "Joao da Silva",
+      nickname: "joao_silva",
+      email: "joao@aluno.unb.br",
+      papel: PAPEIS.ALUNO,
+      status: STATUS.ATIVO,
+      dataNascimento: "2003-12-30",
+    });
+    expect(resposta.usuario).not.toHaveProperty("senha");
+    expect(resposta.usuario).not.toHaveProperty("senhaHash");
+  });
+
+  it("retorna 401 ao buscar usuario autenticado inexistente", async () => {
+    const { sessaoRepository } = criarSessaoRepositoryMock(null);
+    const service = new SessaoService(sessaoRepository);
+
+    await expect(service.obterUsuarioAutenticado("usuario-inexistente")).rejects.toMatchObject({
+      codigoStatus: 401,
+      codigo: CodigoDeErro.TOKEN_INVALIDO,
+      message: MENSAGENS.tokenInvalido,
+    });
   });
 
   it("retorna 401 quando email nao existe", async () => {

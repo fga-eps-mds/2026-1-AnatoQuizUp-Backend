@@ -134,6 +134,41 @@ export class SessaoRepository {
     return usuario ? converterUsuarioBanco(usuario) : null;
   }
 
+  async buscarUsuarioPorId(id: string): Promise<UsuarioSessao | null> {
+    const registros = await prisma.$queryRaw<UsuarioSessaoBanco[]>`
+      SELECT
+        id,
+        nome,
+        nickname,
+        email,
+        senha,
+        perfil,
+        status,
+        "excluidoEm",
+        instituicao,
+        curso,
+        semestre,
+        "dataNascimento",
+        nacionalidade,
+        cidade,
+        estado,
+        "nivelEducacional",
+        departamento,
+        siape,
+        "aprovadoPorId",
+        "aprovadoEm",
+        "criadoEm",
+        "atualizadoEm"
+      FROM usuarios
+      WHERE id = ${id}
+      LIMIT 1
+    `;
+
+    const usuario = registros[0];
+
+    return usuario ? converterUsuarioBanco(usuario) : null;
+  }
+
   async salvarRefreshToken(usuarioId: string, token: string, expiraEm: Date): Promise<void> {
     await prisma.$executeRaw`
       INSERT INTO refresh_tokens (

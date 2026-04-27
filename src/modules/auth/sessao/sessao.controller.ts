@@ -1,8 +1,14 @@
 import type { NextFunction, Request, Response } from "express";
 
-import type { LoginDto, RespostaLoginDto } from "@/modules/auth/sessao/dto/login.types";
+import type {
+  LoginDto,
+  RespostaLoginDto,
+  RespostaUsuarioAutenticadoDto,
+} from "@/modules/auth/sessao/dto/login.types";
 import type { SessaoService } from "@/modules/auth/sessao/sessao.service";
 import { MENSAGENS } from "@/shared/constants/mensagens";
+import { CodigoDeErro } from "@/shared/errors/codigos-de-erro";
+import { ErroAplicacao } from "@/shared/errors/erro-aplicacao";
 import type { RespostaApiSucesso } from "@/shared/types/api.types";
 
 export class SessaoController {
@@ -18,6 +24,31 @@ export class SessaoController {
 
       return response.status(200).json({
         mensagem: MENSAGENS.loginRealizado,
+        dados,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  obterUsuarioAutenticado = async (
+    request: Request,
+    response: Response<RespostaApiSucesso<RespostaUsuarioAutenticadoDto>>,
+    next: NextFunction,
+  ) => {
+    try {
+      if (!request.usuario) {
+        throw new ErroAplicacao({
+          codigoStatus: 401,
+          codigo: CodigoDeErro.TOKEN_INVALIDO,
+          mensagem: MENSAGENS.tokenInvalido,
+        });
+      }
+
+      const dados = await this.sessaoService.obterUsuarioAutenticado(request.usuario.id);
+
+      return response.status(200).json({
+        mensagem: MENSAGENS.usuarioAutenticadoEncontrado,
         dados,
       });
     } catch (error) {

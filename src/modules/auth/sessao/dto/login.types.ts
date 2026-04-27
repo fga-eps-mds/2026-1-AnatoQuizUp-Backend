@@ -33,5 +33,8 @@ export type UsuarioSessaoDto = {
 export type RespostaLoginDto = {
   accessToken: string;
   refreshToken: string;
+};
+
+export type RespostaUsuarioAutenticadoDto = {
   usuario: UsuarioSessaoDto;
 };

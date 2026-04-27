@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import type {
   LoginDto,
   RespostaLoginDto,
+  RespostaUsuarioAutenticadoDto,
   UsuarioSessaoDto,
 } from "@/modules/auth/sessao/dto/login.types";
 import type { SessaoRepository, UsuarioSessao } from "@/modules/auth/sessao/sessao.repository";
@@ -26,6 +27,14 @@ function criarErroNaoAutorizado(mensagem: string) {
     codigoStatus: 401,
     codigo: CodigoDeErro.NAO_AUTORIZADO,
     mensagem,
+  });
+}
+
+function criarErroTokenInvalido() {
+  return new ErroAplicacao({
+    codigoStatus: 401,
+    codigo: CodigoDeErro.TOKEN_INVALIDO,
+    mensagem: MENSAGENS.tokenInvalido,
   });
 }
 
@@ -104,6 +113,17 @@ export class SessaoService {
     return {
       accessToken,
       refreshToken,
+    };
+  }
+
+  async obterUsuarioAutenticado(usuarioId: string): Promise<RespostaUsuarioAutenticadoDto> {
+    const usuario = await this.sessaoRepository.buscarUsuarioPorId(usuarioId);
+
+    if (!usuario || usuario.excluidoEm) {
+      throw criarErroTokenInvalido();
+    }
+
+    return {
       usuario: converterParaUsuarioSessaoDto(usuario),
     };
   }
