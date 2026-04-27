@@ -2,9 +2,11 @@ import type { NextFunction, Request, Response } from "express";
 
 import type {
   AlunoAuthService,
+  RespostaDisponibilidadeEmailDto,
   RespostaDisponibilidadeNicknameDto,
 } from "@/modules/auth/aluno/aluno.service";
 import type {
+  DisponibilidadeEmailAlunoDto,
   DisponibilidadeNicknameAlunoDto,
   RegistrarAlunoDto,
 } from "@/modules/auth/aluno/dto/registrar.aluno.types";
@@ -27,6 +29,23 @@ export class AlunoAuthController {
 
       return response.status(200).json({
         mensagem: MENSAGENS.nicknameDisponivel,
+        dados: disponibilidade,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  verificarEmailDisponivel = async (
+    request: Request<unknown, unknown, unknown, DisponibilidadeEmailAlunoDto>,
+    response: Response<RespostaApiSucesso<RespostaDisponibilidadeEmailDto>>,
+    next: NextFunction,
+  ) => {
+    try {
+      const disponibilidade = await this.alunoAuthService.verificarEmailDisponivel(request.query);
+
+      return response.status(200).json({
+        mensagem: MENSAGENS.emailDisponivel,
         dados: disponibilidade,
       });
     } catch (error) {

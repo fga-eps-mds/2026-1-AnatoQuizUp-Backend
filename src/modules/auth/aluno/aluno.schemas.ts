@@ -37,20 +37,26 @@ export const schemaNicknameAluno = z
     }),
   );
 
+export const schemaEmailAluno = z
+  .string()
+  .trim()
+  .max(255)
+  .pipe(z.email())
+  .transform((email) => email.toLowerCase());
+
 export const schemaDisponibilidadeNicknameAluno = z.object({
   nickname: schemaNicknameAluno,
+});
+
+export const schemaDisponibilidadeEmailAluno = z.object({
+  email: schemaEmailAluno,
 });
 
 export const schemaRegistrarAluno = z
   .object({
     nome: textoObrigatorio(120),
     nickname: schemaNicknameAluno,
-    email: z
-      .string()
-      .trim()
-      .max(255)
-      .pipe(z.email())
-      .transform((email) => email.toLowerCase()),
+    email: schemaEmailAluno,
     senha: z.string().min(8),
     confirmacaoSenha: z.string().min(8),
     instituicao: textoObrigatorio(160),

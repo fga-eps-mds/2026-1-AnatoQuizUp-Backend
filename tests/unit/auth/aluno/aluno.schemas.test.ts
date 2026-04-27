@@ -2,7 +2,10 @@ import type { Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
 
 import { VALOR_NAO_SE_APLICA } from "@/modules/auth/aluno/aluno.constants";
-import { schemaRegistrarAluno } from "@/modules/auth/aluno/aluno.schemas";
+import {
+  schemaDisponibilidadeEmailAluno,
+  schemaRegistrarAluno,
+} from "@/modules/auth/aluno/aluno.schemas";
 import { CodigoDeErro } from "@/shared/errors/codigos-de-erro";
 import { validarRequisicao } from "@/shared/middlewares/validacao.middleware";
 
@@ -47,6 +50,16 @@ describe("schemaRegistrarAluno", () => {
     expect(resultado.estado).toBe("DF");
   });
 
+  it("normaliza email na consulta de disponibilidade", () => {
+    expect(schemaDisponibilidadeEmailAluno.parse({ email: " JOAO@ALUNO.UNB.BR " })).toEqual({
+      email: "joao@aluno.unb.br",
+    });
+  });
+
+  it("rejeita email invalido na consulta de disponibilidade", () => {
+    expect(() => schemaDisponibilidadeEmailAluno.parse({ email: "email-invalido" })).toThrow();
+  });
+
   it("aceita Nao se aplica para instituicao, curso e periodo", () => {
     const resultado = schemaRegistrarAluno.parse({
       ...payloadValido,
@@ -69,7 +82,7 @@ describe("schemaRegistrarAluno", () => {
     ["nickname curto", { nickname: "ab" }],
     ["nickname longo", { nickname: "abcdefghijklmnopqrstu" }],
     ["nickname com espaco", { nickname: "joao junior" }],
-    ["nickname com acento", { nickname: "joao_júnior" }],
+    ["nickname com acento", { nickname: "joao_jÃƒÂºnior" }],
     ["nickname com ponto", { nickname: "joao.junior" }],
     ["nickname com hifen", { nickname: "joao-junior" }],
     ["nickname com simbolo", { nickname: "joao!" }],
