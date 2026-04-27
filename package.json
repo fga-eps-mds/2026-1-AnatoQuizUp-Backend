@@ -8,6 +8,7 @@
     "dev": "tsx watch -r tsconfig-paths/register src/server.ts",
     "build": "tsc --project tsconfig.json && tsc-alias -p tsconfig.json",
     "start": "node dist/src/server.js",
+    "test": "jest",
     "lint": "eslint . --ext .ts",
     "format": "prettier . --write",
     "prisma:generate": "prisma generate",
