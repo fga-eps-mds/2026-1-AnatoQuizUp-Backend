@@ -1,8 +1,10 @@
+import { Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 import type { AlunoAuthRepository } from "@/modules/auth/aluno/aluno.repository";
 import { AlunoAuthService } from "@/modules/auth/aluno/aluno.service";
 import { VALOR_NAO_SE_APLICA } from "@/modules/auth/aluno/aluno.constants";
+import type { RegistrarAlunoDto } from "@/modules/auth/aluno/dto/registrar.aluno.types";
 import { MENSAGENS } from "@/shared/constants/mensagens";
 import { CodigoDeErro } from "@/shared/errors/codigos-de-erro";
 
@@ -42,6 +44,43 @@ function criarAlunoAuthRepositoryMock() {
     buscarPorNickname,
     criar,
   };
+}
+
+function criarInputRegistroValido(): RegistrarAlunoDto {
+  return {
+    nome: "Joao",
+    nickname: "joao_junior",
+    email: "joao.junior@aluno.unb.br",
+    senha: "senha1234",
+    confirmacaoSenha: "senha1234",
+    instituicao: "Universidade de Brasilia",
+    curso: "Medicina",
+    periodo: "3",
+    dataNascimento: "2003-12-30",
+    nacionalidade: "Brasileiro",
+    cidade: "Brasilia",
+    estado: "DF",
+    escolaridade: "GRADUACAO",
+  };
+}
+
+function criarErroPrismaCampoUnico(campo: "email" | "nickname") {
+  return new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
+    code: "P2002",
+    clientVersion: "test",
+    meta: { target: [campo] },
+  });
+}
+
+function criarErroPrismaCampoUnicoPorIndice(campo: "email" | "nickname") {
+  return new Prisma.PrismaClientKnownRequestError("Raw query unique constraint failed", {
+    code: "P2010",
+    clientVersion: "test",
+    meta: {
+      code: "23505",
+      message: `duplicate key value violates unique constraint "usuarios_${campo}_key"`,
+    },
+  });
 }
 
 describe("AlunoAuthService", () => {
@@ -247,5 +286,40 @@ describe("AlunoAuthService", () => {
       email: "joao.junior@aluno.unb.br",
       disponivel: false,
     });
+  });
+
+  it("converte conflito unico de email do banco em erro 409", async () => {
+    const { alunoAuthRepository, criar } = criarAlunoAuthRepositoryMock();
+    criar.mockRejectedValue(criarErroPrismaCampoUnico("email"));
+    const service = new AlunoAuthService(alunoAuthRepository);
+
+    await expect(service.registrar(criarInputRegistroValido())).rejects.toMatchObject({
+      codigoStatus: 409,
+      codigo: CodigoDeErro.CONFLITO,
+      message: MENSAGENS.emailJaCadastrado,
+      detalhes: { email: "joao.junior@aluno.unb.br" },
+    });
+  });
+
+  it("converte conflito unico de nickname do banco em erro 409", async () => {
+    const { alunoAuthRepository, criar } = criarAlunoAuthRepositoryMock();
+    criar.mockRejectedValue(criarErroPrismaCampoUnicoPorIndice("nickname"));
+    const service = new AlunoAuthService(alunoAuthRepository);
+
+    await expect(service.registrar(criarInputRegistroValido())).rejects.toMatchObject({
+      codigoStatus: 409,
+      codigo: CodigoDeErro.CONFLITO,
+      message: MENSAGENS.nicknameJaCadastrado,
+      detalhes: { nickname: "joao_junior" },
+    });
+  });
+
+  it("propaga erro inesperado retornado pelo repositorio", async () => {
+    const { alunoAuthRepository, criar } = criarAlunoAuthRepositoryMock();
+    const erro = new Error("falha inesperada");
+    criar.mockRejectedValue(erro);
+    const service = new AlunoAuthService(alunoAuthRepository);
+
+    await expect(service.registrar(criarInputRegistroValido())).rejects.toBe(erro);
   });
 });

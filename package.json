@@ -38,6 +38,7 @@
   },
   "homepage": "https://github.com/fga-eps-mds/2026-1-AnatoQuizUp-API#readme",
   "dependencies": {
+    "@getbrevo/brevo": "^5.0.4",
     "@prisma/client": "^6.17.1",
     "@types/jsonwebtoken": "^9.0.10",
     "bcryptjs": "^3.0.3",
