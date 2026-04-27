@@ -1,14 +1,15 @@
 import type { Request, Response } from "express";
+import type { ZodType } from "zod";
 
-import { schemaLogin } from "@/modules/auth/sessao/sessao.schemas";
+import { schemaLogin, schemaRefreshToken } from "@/modules/auth/sessao/sessao.schemas";
 import { CodigoDeErro } from "@/shared/errors/codigos-de-erro";
 import { validarRequisicao } from "@/shared/middlewares/validacao.middleware";
 
-function validarBody(body: unknown) {
+function validarBody(body: unknown, schema: ZodType = schemaLogin) {
   const request = { body } as Request;
   const response = {} as Response;
   const next = jest.fn();
-  const middleware = validarRequisicao(schemaLogin);
+  const middleware = validarRequisicao(schema);
 
   middleware(request, response, next);
 
@@ -35,6 +36,32 @@ describe("schemaLogin", () => {
     ["senha vazia", { email: "joao@aluno.unb.br", senha: "" }],
   ])("retorna erro 400 para %s", (_caso, body) => {
     const { next } = validarBody(body);
+
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({
+        codigoStatus: 400,
+        codigo: CodigoDeErro.ERRO_DE_VALIDACAO,
+      }),
+    );
+  });
+});
+
+describe("schemaRefreshToken", () => {
+  it("normaliza refresh token", () => {
+    const resultado = schemaRefreshToken.parse({
+      refreshToken: " refresh-token ",
+    });
+
+    expect(resultado).toEqual({
+      refreshToken: "refresh-token",
+    });
+  });
+
+  it.each([
+    ["refresh token ausente", {}],
+    ["refresh token vazio", { refreshToken: "" }],
+  ])("retorna erro 400 para %s", (_caso, body) => {
+    const { next } = validarBody(body, schemaRefreshToken);
 
     expect(next).toHaveBeenCalledWith(
       expect.objectContaining({

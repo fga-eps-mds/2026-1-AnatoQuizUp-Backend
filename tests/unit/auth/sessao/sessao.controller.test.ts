@@ -3,7 +3,9 @@ import type { Request, Response } from "express";
 import { SessaoController } from "@/modules/auth/sessao/sessao.controller";
 import type {
   LoginDto,
+  RefreshTokenDto,
   RespostaLoginDto,
+  RespostaRenovarSessaoDto,
   RespostaUsuarioAutenticadoDto,
 } from "@/modules/auth/sessao/dto/login.types";
 import type { SessaoService } from "@/modules/auth/sessao/sessao.service";
@@ -99,6 +101,39 @@ describe("SessaoController", () => {
     expect(next).not.toHaveBeenCalled();
   });
 
+  it("retorna 200 com novos tokens ao renovar sessao", async () => {
+    const body: RefreshTokenDto = {
+      refreshToken: "refresh-token-atual",
+    };
+    const dados: RespostaRenovarSessaoDto = {
+      accessToken: "novo-access-token",
+      refreshToken: "novo-refresh-token",
+    };
+    const renovarSessao = jest
+      .fn<SessaoService["renovarSessao"]>()
+      .mockResolvedValue(dados);
+    const controller = new SessaoController({
+      renovarSessao,
+    } as unknown as SessaoService);
+    const request = { body } as Request<unknown, unknown, RefreshTokenDto>;
+    const json = jest.fn();
+    const status = jest.fn(() => ({ json }));
+    const response = {
+      status,
+    } as unknown as Response<RespostaApiSucesso<RespostaRenovarSessaoDto>>;
+    const next = jest.fn();
+
+    await controller.renovarSessao(request, response, next);
+
+    expect(renovarSessao).toHaveBeenCalledWith(body);
+    expect(status).toHaveBeenCalledWith(200);
+    expect(json).toHaveBeenCalledWith({
+      mensagem: MENSAGENS.sessaoRenovada,
+      dados,
+    });
+    expect(next).not.toHaveBeenCalled();
+  });
+
   it("encaminha erro do service para o middleware de erro", async () => {
     const error = new Error("erro");
     const login = jest.fn<SessaoService["login"]>().mockRejectedValue(error);
@@ -111,6 +146,49 @@ describe("SessaoController", () => {
 
     await controller.login(request, response, next);
 
+    expect(next).toHaveBeenCalledWith(error);
+  });
+
+  it("encaminha erro do service ao renovar sessao", async () => {
+    const error = new Error("erro");
+    const renovarSessao = jest
+      .fn<SessaoService["renovarSessao"]>()
+      .mockRejectedValue(error);
+    const controller = new SessaoController({
+      renovarSessao,
+    } as unknown as SessaoService);
+    const request = {
+      body: { refreshToken: "refresh-token-atual" },
+    } as Request<unknown, unknown, RefreshTokenDto>;
+    const response = {} as Response<RespostaApiSucesso<RespostaRenovarSessaoDto>>;
+    const next = jest.fn();
+
+    await controller.renovarSessao(request, response, next);
+
+    expect(next).toHaveBeenCalledWith(error);
+  });
+
+  it("encaminha erro do service ao buscar usuario autenticado", async () => {
+    const error = new Error("erro");
+    const obterUsuarioAutenticado = jest
+      .fn<SessaoService["obterUsuarioAutenticado"]>()
+      .mockRejectedValue(error);
+    const controller = new SessaoController({
+      obterUsuarioAutenticado,
+    } as unknown as SessaoService);
+    const request = {
+      usuario: {
+        id: "usuario-id",
+        email: "joao@aluno.unb.br",
+        papel: PAPEIS.ALUNO,
+      },
+    } as Request;
+    const response = {} as Response<RespostaApiSucesso<RespostaUsuarioAutenticadoDto>>;
+    const next = jest.fn();
+
+    await controller.obterUsuarioAutenticado(request, response, next);
+
+    expect(obterUsuarioAutenticado).toHaveBeenCalledWith("usuario-id");
     expect(next).toHaveBeenCalledWith(error);
   });
 

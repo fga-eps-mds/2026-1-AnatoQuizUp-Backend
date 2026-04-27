@@ -1,8 +1,11 @@
 import bcrypt from "bcryptjs";
 
+import { jwtRefreshSecretKey } from "@/config/env";
 import type {
   LoginDto,
+  RefreshTokenDto,
   RespostaLoginDto,
+  RespostaRenovarSessaoDto,
   RespostaUsuarioAutenticadoDto,
   UsuarioSessaoDto,
 } from "@/modules/auth/sessao/dto/login.types";
@@ -13,7 +16,7 @@ import { CodigoDeErro } from "@/shared/errors/codigos-de-erro";
 import type { ValorCodigoDeErro } from "@/shared/errors/codigos-de-erro";
 import { ErroAplicacao } from "@/shared/errors/erro-aplicacao";
 import type { PayloadAutenticacao } from "@/shared/types/autenticacao.types";
-import { gerarRefreshToken, gerarTokenDeAcesso } from "@/shared/utils/jwt";
+import { gerarRefreshToken, gerarTokenDeAcesso, verificarTokenJwt } from "@/shared/utils/jwt";
 
 const DIAS_EXPIRACAO_REFRESH_TOKEN = 7;
 
@@ -45,6 +48,38 @@ function criarErroTokenInvalido() {
     codigo: CodigoDeErro.TOKEN_INVALIDO,
     mensagem: MENSAGENS.tokenInvalido,
   });
+}
+
+function validarStatusUsuarioParaSessao(usuario: UsuarioSessao): void {
+  if (usuario.status === STATUS.PENDENTE) {
+    throw criarErroAcessoProibido(
+      CodigoDeErro.CADASTRO_EM_ANALISE,
+      MENSAGENS.cadastroEmAnalise,
+    );
+  }
+
+  if (usuario.status === STATUS.INATIVO) {
+    throw criarErroAcessoProibido(
+      CodigoDeErro.CONTA_DESATIVADA,
+      MENSAGENS.contaDesativada,
+    );
+  }
+
+  if (usuario.status === STATUS.RECUSADO) {
+    throw criarErroAcessoProibido(
+      CodigoDeErro.CADASTRO_RECUSADO,
+      MENSAGENS.cadastroRecusado,
+    );
+  }
+}
+
+function criarPayloadAutenticacao(usuario: UsuarioSessao): PayloadAutenticacao {
+  return {
+    id: usuario.id,
+    email: usuario.email,
+    papel: usuario.papel,
+    status: usuario.status,
+  };
 }
 
 function converterParaUsuarioSessaoDto(usuario: UsuarioSessao): UsuarioSessaoDto {
@@ -92,33 +127,9 @@ export class SessaoService {
       throw criarErroNaoAutorizado(MENSAGENS.credenciaisInvalidas);
     }
 
-    if (usuario.status === STATUS.PENDENTE) {
-      throw criarErroAcessoProibido(
-        CodigoDeErro.CADASTRO_EM_ANALISE,
-        MENSAGENS.cadastroEmAnalise,
-      );
-    }
+    validarStatusUsuarioParaSessao(usuario);
 
-    if (usuario.status === STATUS.INATIVO) {
-      throw criarErroAcessoProibido(
-        CodigoDeErro.CONTA_DESATIVADA,
-        MENSAGENS.contaDesativada,
-      );
-    }
-
-    if (usuario.status === STATUS.RECUSADO) {
-      throw criarErroAcessoProibido(
-        CodigoDeErro.CADASTRO_RECUSADO,
-        MENSAGENS.cadastroRecusado,
-      );
-    }
-
-    const payload: PayloadAutenticacao = {
-      id: usuario.id,
-      email: usuario.email,
-      papel: usuario.papel,
-      status: usuario.status,
-    };
+    const payload = criarPayloadAutenticacao(usuario);
     const accessToken = gerarTokenDeAcesso(payload);
     const refreshToken = gerarRefreshToken(payload);
 
@@ -143,6 +154,51 @@ export class SessaoService {
 
     return {
       usuario: converterParaUsuarioSessaoDto(usuario),
+    };
+  }
+
+  async renovarSessao(input: RefreshTokenDto): Promise<RespostaRenovarSessaoDto> {
+    const refreshTokenAtual = input.refreshToken.trim();
+    const payload = verificarTokenJwt(refreshTokenAtual, jwtRefreshSecretKey);
+    const refreshTokenSalvo = await this.sessaoRepository.buscarRefreshToken(refreshTokenAtual);
+
+    if (!refreshTokenSalvo || refreshTokenSalvo.revogadoEm) {
+      throw criarErroTokenInvalido();
+    }
+
+    if (refreshTokenSalvo.expiraEm.getTime() <= Date.now()) {
+      throw criarErroTokenInvalido();
+    }
+
+    if (refreshTokenSalvo.usuarioId !== payload.id) {
+      throw criarErroTokenInvalido();
+    }
+
+    const usuario = await this.sessaoRepository.buscarUsuarioPorId(refreshTokenSalvo.usuarioId);
+
+    if (!usuario || usuario.excluidoEm) {
+      throw criarErroTokenInvalido();
+    }
+
+    validarStatusUsuarioParaSessao(usuario);
+
+    const novoPayload = criarPayloadAutenticacao(usuario);
+    const accessToken = gerarTokenDeAcesso(novoPayload);
+    const refreshToken = gerarRefreshToken(novoPayload);
+    const rotacionouToken = await this.sessaoRepository.rotacionarRefreshToken(
+      refreshTokenAtual,
+      usuario.id,
+      refreshToken,
+      adicionarDias(new Date(), DIAS_EXPIRACAO_REFRESH_TOKEN),
+    );
+
+    if (!rotacionouToken) {
+      throw criarErroTokenInvalido();
+    }
+
+    return {
+      accessToken,
+      refreshToken,
     };
   }
 }
