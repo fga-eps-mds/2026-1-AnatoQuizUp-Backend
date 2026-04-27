@@ -12,6 +12,7 @@ import { ErroAplicacao } from "@/shared/errors/erro-aplicacao";
 import { CodigoDeErro } from "@/shared/errors/codigos-de-erro";
 import { middlewareAutenticacao } from "@/shared/middlewares/autenticacao.middleware";
 import { middlewareTratamentoErros } from "@/shared/middlewares/tratamento-erros.middleware";
+import { adminRouter } from "@/modules/admin/admin.routes";
 
 const aplicacao = express();
 const roteadorApi = Router();
@@ -34,6 +35,7 @@ aplicacao.get("/health", (_request, response) => {
 roteadorApi.use("/auth", authRouter);
 roteadorApi.use(middlewareAutenticacao);
 roteadorApi.use("/exemplos", exemploRouter);
+roteadorApi.use("/admin", adminRouter);
 aplicacao.use("/api/v1", roteadorApi);
 aplicacao.use("/api/auth", authRouter);
 
