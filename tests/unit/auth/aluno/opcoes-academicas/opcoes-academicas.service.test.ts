@@ -1,4 +1,3 @@
-
 import { AlunoOpcoesAcademicasService } from "@/modules/auth/aluno/opcoes-academicas/opcoes-academicas.service";
 import {
   CURSOS_ALUNO_OPCOES,
@@ -21,4 +20,3 @@ describe("AlunoOpcoesAcademicasService", () => {
     });
   });
 });
-
