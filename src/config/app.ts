@@ -6,6 +6,7 @@ import { exemploRouter } from "@/modules/exemplo";
 import { MENSAGENS } from "@/shared/constants/mensagens";
 import { ErroAplicacao } from "@/shared/errors/erro-aplicacao";
 import { CodigoDeErro } from "@/shared/errors/codigos-de-erro";
+import { middlewareAutenticacao } from "@/shared/middlewares/autenticacao.middleware";
 import { middlewareTratamentoErros } from "@/shared/middlewares/tratamento-erros.middleware";
 import { loggerHttp } from "@/config/logger";
 
@@ -27,6 +28,7 @@ aplicacao.get("/health", (_request, response) => {
   });
 });
 
+roteadorApi.use(middlewareAutenticacao);
 roteadorApi.use("/exemplos", exemploRouter);
 aplicacao.use("/api/v1", roteadorApi);
 
