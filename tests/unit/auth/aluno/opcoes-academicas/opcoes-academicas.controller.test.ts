@@ -1,5 +1,4 @@
 import type { Request, Response } from "express";
-import { describe, expect, it, vi } from "vitest";
 
 import type { OpcoesAcademicasAlunoDto } from "@/modules/auth/aluno/opcoes-academicas/dto/resposta.opcoes-academicas.types";
 import { AlunoOpcoesAcademicasController } from "@/modules/auth/aluno/opcoes-academicas/opcoes-academicas.controller";
@@ -16,17 +15,17 @@ describe("AlunoOpcoesAcademicasController", () => {
       periodos: ["1o Periodo"],
       naoSeAplica: "Não se aplica",
     };
-    const listarOpcoesAcademicas = vi
+    const listarOpcoesAcademicas = jest
       .fn<AlunoOpcoesAcademicasService["listarOpcoesAcademicas"]>()
       .mockReturnValue(opcoes);
     const controller = new AlunoOpcoesAcademicasController({
       listarOpcoesAcademicas,
     } as unknown as AlunoOpcoesAcademicasService);
     const request = {} as Request;
-    const json = vi.fn();
-    const status = vi.fn(() => ({ json }));
+    const json = jest.fn();
+    const status = jest.fn(() => ({ json }));
     const response = { status } as unknown as Response<RespostaApiSucesso<typeof opcoes>>;
-    const next = vi.fn();
+    const next = jest.fn();
 
     await controller.listarOpcoesAcademicas(request, response, next);
 

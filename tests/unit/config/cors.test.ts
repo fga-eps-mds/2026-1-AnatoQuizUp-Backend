@@ -1,4 +1,3 @@
-import { describe, expect, it, vi } from "vitest";
 
 import { criarOpcoesCors, parseCorsOrigins } from "@/config/cors";
 
@@ -20,7 +19,7 @@ describe("configuracao de CORS", () => {
 
   it("permite origem configurada", () => {
     const originHandler = getOriginHandler(["http://localhost:5173"]);
-    const callback = vi.fn<OriginCallback>();
+    const callback = jest.fn<OriginCallback>();
 
     originHandler("http://localhost:5173", callback);
 
@@ -29,7 +28,7 @@ describe("configuracao de CORS", () => {
 
   it("permite requisicoes sem origin", () => {
     const originHandler = getOriginHandler(["http://localhost:5173"]);
-    const callback = vi.fn<OriginCallback>();
+    const callback = jest.fn<OriginCallback>();
 
     originHandler(undefined, callback);
 
@@ -38,7 +37,7 @@ describe("configuracao de CORS", () => {
 
   it("bloqueia origem nao configurada", () => {
     const originHandler = getOriginHandler(["http://localhost:5173"]);
-    const callback = vi.fn<OriginCallback>();
+    const callback = jest.fn<OriginCallback>();
 
     originHandler("https://nao-permitido.example.com", callback);
 

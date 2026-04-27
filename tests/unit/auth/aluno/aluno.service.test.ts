@@ -1,5 +1,4 @@
-import bcrypt from "bcrypt";
-import { describe, expect, it, vi } from "vitest";
+import bcrypt from "bcryptjs";
 
 import type { AlunoAuthRepository } from "@/modules/auth/aluno/aluno.repository";
 import { AlunoAuthService } from "@/modules/auth/aluno/aluno.service";
@@ -8,9 +7,9 @@ import { MENSAGENS } from "@/shared/constants/mensagens";
 import { CodigoDeErro } from "@/shared/errors/codigos-de-erro";
 
 function criarAlunoAuthRepositoryMock() {
-  const buscarPorEmail = vi.fn<AlunoAuthRepository["buscarPorEmail"]>(async () => null);
-  const buscarPorNickname = vi.fn<AlunoAuthRepository["buscarPorNickname"]>(async () => null);
-  const criar = vi.fn<AlunoAuthRepository["criar"]>(async (data) => ({
+  const buscarPorEmail = jest.fn<AlunoAuthRepository["buscarPorEmail"]>(async () => null);
+  const buscarPorNickname = jest.fn<AlunoAuthRepository["buscarPorNickname"]>(async () => null);
+  const criar = jest.fn<AlunoAuthRepository["criar"]>(async (data) => ({
     id: "usuario-id",
     nome: data.nome,
     nickname: data.nickname,

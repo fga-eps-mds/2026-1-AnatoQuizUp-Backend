@@ -1,5 +1,4 @@
 import type { Request, Response } from "express";
-import { describe, expect, it, vi } from "vitest";
 
 import { VALOR_NAO_SE_APLICA } from "@/modules/auth/aluno/aluno.constants";
 import {
@@ -28,7 +27,7 @@ const payloadValido = {
 function validarBody(body: unknown) {
   const request = { body } as Request;
   const response = {} as Response;
-  const next = vi.fn();
+  const next = jest.fn();
   const middleware = validarRequisicao(schemaRegistrarAluno);
 
   middleware(request, response, next);
