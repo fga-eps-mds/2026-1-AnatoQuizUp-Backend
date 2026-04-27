@@ -1,4 +1,4 @@
-import type { Request, RequestHandler } from "express";
+import type { RequestHandler } from "express";
 import { z } from "zod";
 import type { ZodType } from "zod";
 
@@ -26,18 +26,12 @@ export function validarRequisicao<T>(
       );
     }
 
-    if (alvo === "body") {
-      (request as Request & Record<AlvoValidacao, unknown>)[alvo] = validacao.data;
-      return next();
-    }
-
-    const destino = request[alvo] as Record<string, unknown>;
-
-    for (const chave of Object.keys(destino)) {
-      delete destino[chave];
-    }
-
-    Object.assign(destino, validacao.data);
+    Object.defineProperty(request, alvo, {
+      value: validacao.data,
+      configurable: true,
+      enumerable: true,
+      writable: true,
+    });
 
     return next();
   };
