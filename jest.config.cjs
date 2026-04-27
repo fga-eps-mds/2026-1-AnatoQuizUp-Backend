@@ -7,6 +7,7 @@ module.exports = {
     "!src/**/*.spec.ts",
     "!src/**/index.ts",
     "!src/server.ts",
+    "!src/scripts/**",
     "!src/config/app.ts",
     "!src/**/*.routes.ts",
     "!src/**/*.constants.ts",
