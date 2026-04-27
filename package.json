@@ -38,6 +38,7 @@
   },
   "homepage": "https://github.com/fga-eps-mds/2026-1-AnatoQuizUp-API#readme",
   "dependencies": {
+    "@getbrevo/brevo": "^5.0.4",
     "@prisma/client": "^6.17.1",
     "@types/jsonwebtoken": "^9.0.10",
     "bcryptjs": "^3.0.3",
@@ -73,5 +74,17 @@
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.1"
+  },
+  "jest": {
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "json-summary"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.{js,jsx,ts,tsx}",
+      "!src/**/*.d.ts",
+      "!src/**/index.{js,ts}"
+    ]
   }
 }
