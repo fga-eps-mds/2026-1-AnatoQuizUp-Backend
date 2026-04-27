@@ -11,4 +11,3 @@ const alunoOpcoesAcademicasRouter = Router();
 alunoOpcoesAcademicasRouter.get("/", opcoesAcademicasController.listarOpcoesAcademicas);
 
 export { alunoOpcoesAcademicasRouter };
-

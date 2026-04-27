@@ -1,19 +1,19 @@
 import jwt from "jsonwebtoken";
 
-import { PAPEIS } from "../../constants/papeis";
+import { PAPEIS } from "@/shared/constants/papeis";
 import { STATUS } from "@/shared/constants/status";
 import {
   jwtSecretKey,
   jwtRefreshSecretKey,
   jwtPasswordRedefinitionSecretKey,
-} from "../../../config/env";
-import type { PayloadAutenticacao } from "../../types/autenticacao.types";
+} from "@/config/env";
+import type { PayloadAutenticacao } from "@/shared/types/autenticacao.types";
 import {
   gerarTokenDeAcesso,
   gerarTokenDeRedefinicaoDeSenha,
   gerarRefreshToken,
   verificarTokenJwt,
-} from "../jwt";
+} from "@/shared/utils/jwt";
 
 const payload_autenticacao: PayloadAutenticacao = {
   id: "uuid",

@@ -27,7 +27,7 @@ anatoquizup-api/
 │   ├── shared/
 │   └── server.ts
 ├── tests/
-│   └── e2e/
+│   └── unit/
 ├── .env.example
 ├── docker-compose.yml
 ├── Dockerfile
