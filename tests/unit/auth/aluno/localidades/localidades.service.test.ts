@@ -1,4 +1,3 @@
-import { describe, expect, it } from "vitest";
 
 import { AlunoLocalidadesService } from "@/modules/auth/aluno/localidades/localidades.service";
 

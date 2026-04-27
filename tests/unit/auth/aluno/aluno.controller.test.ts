@@ -1,5 +1,4 @@
 import type { Request, Response } from "express";
-import { describe, expect, it, vi } from "vitest";
 
 import { AlunoAuthController } from "@/modules/auth/aluno/aluno.controller";
 import type { AlunoAuthService } from "@/modules/auth/aluno/aluno.service";
@@ -48,15 +47,15 @@ describe("AlunoAuthController", () => {
       createdAt: "2026-04-25T12:00:00.000Z",
       updatedAt: "2026-04-25T12:00:00.000Z",
     };
-    const registrar = vi.fn<AlunoAuthService["registrar"]>().mockResolvedValue(aluno);
+    const registrar = jest.fn<AlunoAuthService["registrar"]>().mockResolvedValue(aluno);
     const controller = new AlunoAuthController({
       registrar,
     } as unknown as AlunoAuthService);
     const request = { body } as Request<unknown, unknown, RegistrarAlunoDto>;
-    const json = vi.fn();
-    const status = vi.fn(() => ({ json }));
+    const json = jest.fn();
+    const status = jest.fn(() => ({ json }));
     const response = { status } as unknown as Response<RespostaApiSucesso<RespostaAlunoDto>>;
-    const next = vi.fn();
+    const next = jest.fn();
 
     await controller.registrar(request, response, next);
 
@@ -76,7 +75,7 @@ describe("AlunoAuthController", () => {
       nickname: "joao_junior",
       disponivel: true,
     };
-    const verificarNicknameDisponivel = vi
+    const verificarNicknameDisponivel = jest
       .fn<AlunoAuthService["verificarNicknameDisponivel"]>()
       .mockResolvedValue(disponibilidade);
     const controller = new AlunoAuthController({
@@ -85,10 +84,10 @@ describe("AlunoAuthController", () => {
     const request = {
       query: { nickname: "joao_junior" },
     } as Request<unknown, unknown, unknown, DisponibilidadeNicknameAlunoDto>;
-    const json = vi.fn();
-    const status = vi.fn(() => ({ json }));
+    const json = jest.fn();
+    const status = jest.fn(() => ({ json }));
     const response = { status } as unknown as Response<RespostaApiSucesso<typeof disponibilidade>>;
-    const next = vi.fn();
+    const next = jest.fn();
 
     await controller.verificarNicknameDisponivel(request, response, next);
 
@@ -106,7 +105,7 @@ describe("AlunoAuthController", () => {
       email: "joao.junior@aluno.unb.br",
       disponivel: true,
     };
-    const verificarEmailDisponivel = vi
+    const verificarEmailDisponivel = jest
       .fn<AlunoAuthService["verificarEmailDisponivel"]>()
       .mockResolvedValue(disponibilidade);
     const controller = new AlunoAuthController({
@@ -115,10 +114,10 @@ describe("AlunoAuthController", () => {
     const request = {
       query: { email: "joao.junior@aluno.unb.br" },
     } as Request<unknown, unknown, unknown, DisponibilidadeEmailAlunoDto>;
-    const json = vi.fn();
-    const status = vi.fn(() => ({ json }));
+    const json = jest.fn();
+    const status = jest.fn(() => ({ json }));
     const response = { status } as unknown as Response<RespostaApiSucesso<typeof disponibilidade>>;
-    const next = vi.fn();
+    const next = jest.fn();
 
     await controller.verificarEmailDisponivel(request, response, next);
 
