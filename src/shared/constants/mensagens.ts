@@ -13,6 +13,10 @@ export const MENSAGENS = {
   opcoesAcademicasListadas: "Opcoes academicas listadas com sucesso.",
   emailDisponivel: "Email disponivel para uso.",
   nicknameDisponivel: "Nickname disponivel para uso.",
+  instrucoesRecuperacaoSenhaEnviadas:
+    "Se o email existir no sistema, enviamos instrucoes.",
+  senhaRedefinida: "Senha redefinida com sucesso.",
+  linkRedefinicaoSenhaInvalido: "Link expirado ou invalido.",
   estadosListados: "Estados listados com sucesso.",
   cidadesListadas: "Cidades listadas com sucesso.",
   origemCorsNaoPermitida: "Origem nao permitida pelo CORS.",
