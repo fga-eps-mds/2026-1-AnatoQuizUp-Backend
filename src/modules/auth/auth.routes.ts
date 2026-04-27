@@ -5,7 +5,6 @@ import { alunoLocalidadesRouter } from "@/modules/auth/aluno/localidades/localid
 import { sessaoRouter } from "@/modules/auth/sessao/sessao.routes";
 import { recuperarSenhaRouter } from "@/modules/auth/recuperar-senha/recuperar-senha.routes";
 
-
 const authRouter = Router();
 
 authRouter.use("/", sessaoRouter);
