@@ -212,4 +212,74 @@ describe("AdminService", () => {
       message: MENSAGENS.usuarioStatusInvalido,
     } satisfies Partial<ErroAplicacao>);
   });
+  test("buscarPorId converte campos opcionais de data preenchidos", async () => {
+    userRepository.buscarPorId.mockResolvedValue(
+      criarUsuarioSemSenha({
+        dataNascimento: new Date("2000-01-01T00:00:00.000Z"),
+        aprovadoEm: new Date("2026-04-27T04:00:00.000Z"),
+        excluidoEm: new Date("2026-04-28T04:00:00.000Z"),
+      }),
+    );
+
+    const resposta = await service.buscarPorId("user-1");
+
+    expect(resposta).toMatchObject({
+      dataNascimento: "2000-01-01T00:00:00.000Z",
+      aprovadoEm: "2026-04-27T04:00:00.000Z",
+      excluidoEm: "2026-04-28T04:00:00.000Z",
+    });
+  });
+
+  test("alterarStatus lanca erro 404 quando usuario nao existe", async () => {
+    userRepository.buscarPorId.mockResolvedValue(null);
+
+    await expect(
+      service.alterarStatus("missing", { status: "INACTIVE" }, adminContexto),
+    ).rejects.toMatchObject({
+      codigoStatus: 404,
+      message: MENSAGENS.usuarioNaoEncontrado,
+    } satisfies Partial<ErroAplicacao>);
+  });
+
+  test("alterarStatus rejeita transicao sem mudanca", async () => {
+    userRepository.buscarPorId.mockResolvedValue(criarUsuarioSemSenha({ status: "ATIVO" }));
+
+    await expect(
+      service.alterarStatus("user-1", { status: "ACTIVE" }, adminContexto),
+    ).rejects.toMatchObject({
+      codigoStatus: 409,
+      message: MENSAGENS.usuarioStatusInvalido,
+    } satisfies Partial<ErroAplicacao>);
+  });
+
+  test("alterarStatus aprova professor pendente sem aprovador quando contexto nao tem id", async () => {
+    userRepository.buscarPorId.mockResolvedValue(
+      criarUsuarioSemSenha({ perfil: "PROFESSOR", status: "PENDENTE" }),
+    );
+    userRepository.atualizarStatus.mockResolvedValue(
+      criarUsuarioSemSenha({ perfil: "PROFESSOR", status: "ATIVO" }),
+    );
+
+    const resposta = await service.alterarStatus(
+      "user-1",
+      { status: "ACTIVE" },
+      { id: null, perfil: "ADMIN" },
+    );
+
+    expect(userRepository.atualizarStatus).toHaveBeenCalledWith("user-1", "ATIVO", undefined);
+    expect(resposta.status).toBe("ATIVO");
+  });
+
+  test("alterarStatus rejeita professor pendente continuar pendente", async () => {
+    userRepository.buscarPorId.mockResolvedValue(
+      criarUsuarioSemSenha({ perfil: "PROFESSOR", status: "PENDENTE" }),
+    );
+
+    await expect(
+      service.alterarStatus("user-1", { status: "PENDING" }, adminContexto),
+    ).rejects.toMatchObject({
+      codigoStatus: 409,
+      message: MENSAGENS.usuarioStatusInvalido,
+    } satisfies Partial<ErroAplicacao>);
+  });
 });
