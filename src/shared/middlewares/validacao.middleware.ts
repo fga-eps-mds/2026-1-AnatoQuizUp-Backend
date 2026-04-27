@@ -26,7 +26,16 @@ export function validarRequisicao<T>(
       );
     }
 
-    (request as Request & Record<AlvoValidacao, unknown>)[alvo] = validacao.data;
+    if (alvo === "body") {
+      (request as Request & Record<AlvoValidacao, unknown>)[alvo] = validacao.data;
+      return next();
+    }
+    Object.defineProperty(request, alvo, {
+      value: validacao.data, 
+      writable: false,
+      configurable: false,
+      enumerable: true
+    })
 
     return next();
   };
