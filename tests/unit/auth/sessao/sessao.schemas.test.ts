@@ -1,7 +1,11 @@
 import type { Request, Response } from "express";
 import type { ZodType } from "zod";
 
-import { schemaLogin, schemaRefreshToken } from "@/modules/auth/sessao/sessao.schemas";
+import {
+  schemaLogin,
+  schemaLogout,
+  schemaRefreshToken,
+} from "@/modules/auth/sessao/sessao.schemas";
 import { CodigoDeErro } from "@/shared/errors/codigos-de-erro";
 import { validarRequisicao } from "@/shared/middlewares/validacao.middleware";
 
@@ -69,5 +73,17 @@ describe("schemaRefreshToken", () => {
         codigo: CodigoDeErro.ERRO_DE_VALIDACAO,
       }),
     );
+  });
+});
+
+describe("schemaLogout", () => {
+  it("normaliza refresh token usado no logout", () => {
+    const resultado = schemaLogout.parse({
+      refreshToken: " refresh-token ",
+    });
+
+    expect(resultado).toEqual({
+      refreshToken: "refresh-token",
+    });
   });
 });

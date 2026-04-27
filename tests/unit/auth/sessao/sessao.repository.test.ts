@@ -218,4 +218,24 @@ describe("SessaoRepository", () => {
 
     expect(executeRawTransacao).toHaveBeenCalledTimes(1);
   });
+
+  it("revoga refresh token da sessao atual", async () => {
+    executeRawMock.mockResolvedValueOnce(1);
+    const repository = new SessaoRepository();
+
+    await expect(
+      repository.revogarRefreshToken("refresh-token", "usuario-id"),
+    ).resolves.toBe(true);
+
+    expect(executeRawMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("retorna false quando nenhum refresh token foi revogado", async () => {
+    executeRawMock.mockResolvedValueOnce(0);
+    const repository = new SessaoRepository();
+
+    await expect(
+      repository.revogarRefreshToken("refresh-token", "usuario-id"),
+    ).resolves.toBe(false);
+  });
 });

@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from "express";
 
 import type {
   LoginDto,
+  LogoutDto,
   RefreshTokenDto,
   RespostaLoginDto,
   RespostaRenovarSessaoDto,
@@ -45,6 +46,28 @@ export class SessaoController {
         mensagem: MENSAGENS.sessaoRenovada,
         dados,
       });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  logout = async (
+    request: Request<unknown, unknown, LogoutDto>,
+    response: Response<void>,
+    next: NextFunction,
+  ) => {
+    try {
+      if (!request.usuario) {
+        throw new ErroAplicacao({
+          codigoStatus: 401,
+          codigo: CodigoDeErro.TOKEN_INVALIDO,
+          mensagem: MENSAGENS.tokenInvalido,
+        });
+      }
+
+      await this.sessaoService.logout(request.usuario.id, request.body);
+
+      return response.status(204).send();
     } catch (error) {
       return next(error);
     }

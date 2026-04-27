@@ -57,6 +57,9 @@ function criarSessaoRepositoryMock(usuario: UsuarioSessao | null = criarUsuarioS
   const rotacionarRefreshToken = jest
     .fn<SessaoRepository["rotacionarRefreshToken"]>()
     .mockResolvedValue(true);
+  const revogarRefreshToken = jest
+    .fn<SessaoRepository["revogarRefreshToken"]>()
+    .mockResolvedValue(true);
 
   return {
     sessaoRepository: {
@@ -65,12 +68,14 @@ function criarSessaoRepositoryMock(usuario: UsuarioSessao | null = criarUsuarioS
       salvarRefreshToken,
       buscarRefreshToken,
       rotacionarRefreshToken,
+      revogarRefreshToken,
     } as unknown as SessaoRepository,
     buscarUsuarioPorEmail,
     buscarUsuarioPorId,
     salvarRefreshToken,
     buscarRefreshToken,
     rotacionarRefreshToken,
+    revogarRefreshToken,
   };
 }
 
@@ -211,6 +216,102 @@ describe("SessaoService", () => {
       resposta.refreshToken,
       expect.any(Date),
     );
+  });
+
+  it("realiza logout revogando refresh token da sessao atual", async () => {
+    const refreshToken = gerarRefreshToken(criarPayloadAutenticacao());
+    const { sessaoRepository, buscarRefreshToken, revogarRefreshToken } =
+      criarSessaoRepositoryMock();
+    buscarRefreshToken.mockResolvedValueOnce({
+      token: refreshToken,
+      usuarioId: "usuario-id",
+      expiraEm: new Date(Date.now() + 60 * 60 * 1000),
+      revogadoEm: null,
+    });
+    const service = new SessaoService(sessaoRepository);
+
+    await expect(
+      service.logout("usuario-id", { refreshToken: ` ${refreshToken} ` }),
+    ).resolves.toBeUndefined();
+
+    expect(buscarRefreshToken).toHaveBeenCalledWith(refreshToken);
+    expect(revogarRefreshToken).toHaveBeenCalledWith(refreshToken, "usuario-id");
+  });
+
+  it("retorna 401 ao fazer logout com refresh token nao encontrado", async () => {
+    const { sessaoRepository, buscarRefreshToken, revogarRefreshToken } =
+      criarSessaoRepositoryMock();
+    buscarRefreshToken.mockResolvedValueOnce(null);
+    const service = new SessaoService(sessaoRepository);
+
+    await expect(
+      service.logout("usuario-id", { refreshToken: "refresh-token-inexistente" }),
+    ).rejects.toMatchObject({
+      codigoStatus: 401,
+      codigo: CodigoDeErro.TOKEN_INVALIDO,
+      message: MENSAGENS.tokenInvalido,
+    });
+    expect(revogarRefreshToken).not.toHaveBeenCalled();
+  });
+
+  it("retorna 401 ao fazer logout com refresh token ja revogado", async () => {
+    const refreshToken = gerarRefreshToken(criarPayloadAutenticacao());
+    const { sessaoRepository, buscarRefreshToken, revogarRefreshToken } =
+      criarSessaoRepositoryMock();
+    buscarRefreshToken.mockResolvedValueOnce({
+      token: refreshToken,
+      usuarioId: "usuario-id",
+      expiraEm: new Date(Date.now() + 60 * 60 * 1000),
+      revogadoEm: new Date("2026-04-26T12:00:00.000Z"),
+    });
+    const service = new SessaoService(sessaoRepository);
+
+    await expect(service.logout("usuario-id", { refreshToken })).rejects.toMatchObject({
+      codigoStatus: 401,
+      codigo: CodigoDeErro.TOKEN_INVALIDO,
+      message: MENSAGENS.tokenInvalido,
+    });
+    expect(revogarRefreshToken).not.toHaveBeenCalled();
+  });
+
+  it("retorna 401 ao fazer logout com refresh token de outro usuario", async () => {
+    const refreshToken = gerarRefreshToken(criarPayloadAutenticacao());
+    const { sessaoRepository, buscarRefreshToken, revogarRefreshToken } =
+      criarSessaoRepositoryMock();
+    buscarRefreshToken.mockResolvedValueOnce({
+      token: refreshToken,
+      usuarioId: "outro-usuario-id",
+      expiraEm: new Date(Date.now() + 60 * 60 * 1000),
+      revogadoEm: null,
+    });
+    const service = new SessaoService(sessaoRepository);
+
+    await expect(service.logout("usuario-id", { refreshToken })).rejects.toMatchObject({
+      codigoStatus: 401,
+      codigo: CodigoDeErro.TOKEN_INVALIDO,
+      message: MENSAGENS.tokenInvalido,
+    });
+    expect(revogarRefreshToken).not.toHaveBeenCalled();
+  });
+
+  it("retorna 401 ao fazer logout quando token nao foi revogado por concorrencia", async () => {
+    const refreshToken = gerarRefreshToken(criarPayloadAutenticacao());
+    const { sessaoRepository, buscarRefreshToken, revogarRefreshToken } =
+      criarSessaoRepositoryMock();
+    buscarRefreshToken.mockResolvedValueOnce({
+      token: refreshToken,
+      usuarioId: "usuario-id",
+      expiraEm: new Date(Date.now() + 60 * 60 * 1000),
+      revogadoEm: null,
+    });
+    revogarRefreshToken.mockResolvedValueOnce(false);
+    const service = new SessaoService(sessaoRepository);
+
+    await expect(service.logout("usuario-id", { refreshToken })).rejects.toMatchObject({
+      codigoStatus: 401,
+      codigo: CodigoDeErro.TOKEN_INVALIDO,
+      message: MENSAGENS.tokenInvalido,
+    });
   });
 
   it("retorna 401 ao renovar sessao com refresh token expirado", async () => {
