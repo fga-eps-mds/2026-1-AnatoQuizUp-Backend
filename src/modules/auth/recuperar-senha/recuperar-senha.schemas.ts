@@ -15,3 +15,6 @@ export const schemaRedefinirSenha = z.object({
   token: z.string().trim().min(1),
   senha: z.string().min(8),
 });
+
+export type SolicitarRecuperacaoSenhaDto = z.infer<typeof schemaSolicitarRecuperacaoSenha>;
+export type RedefinirSenhaDto = z.infer<typeof schemaRedefinirSenha>;

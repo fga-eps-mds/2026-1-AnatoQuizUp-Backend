@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import type { ZodType } from "zod";
 
 import {
   schemaRedefinirSenha,
@@ -7,7 +8,7 @@ import {
 import { CodigoDeErro } from "@/shared/errors/codigos-de-erro";
 import { validarRequisicao } from "@/shared/middlewares/validacao.middleware";
 
-function validarBody(schema: typeof schemaSolicitarRecuperacaoSenha | typeof schemaRedefinirSenha, body: unknown) {
+function validarBody(schema: ZodType<unknown>, body: unknown) {
   const request = { body } as Request;
   const response = {} as Response;
   const next = jest.fn();
@@ -43,7 +44,11 @@ describe("schemas de recuperacao de senha", () => {
     ["token ausente", schemaRedefinirSenha, { senha: "novaSenha123" }],
     ["token vazio", schemaRedefinirSenha, { token: "   ", senha: "novaSenha123" }],
     ["senha ausente", schemaRedefinirSenha, { token: "reset-token" }],
-    ["senha menor que 8 caracteres", schemaRedefinirSenha, { token: "reset-token", senha: "1234567" }],
+    [
+      "senha menor que 8 caracteres",
+      schemaRedefinirSenha,
+      { token: "reset-token", senha: "1234567" },
+    ],
   ])("retorna erro 400 para %s", (_caso, schema, body) => {
     const next = validarBody(schema, body);
 

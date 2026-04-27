@@ -4,7 +4,7 @@ import type { RecuperarSenhaService } from "@/modules/auth/recuperar-senha/recup
 import type {
   RedefinirSenhaDto,
   SolicitarRecuperacaoSenhaDto,
-} from "@/modules/auth/recuperar-senha/recuperar-senha.types";
+} from "@/modules/auth/recuperar-senha/recuperar-senha.schemas";
 import { MENSAGENS } from "@/shared/constants/mensagens";
 import type { RespostaApiSucesso } from "@/shared/types/api.types";
 

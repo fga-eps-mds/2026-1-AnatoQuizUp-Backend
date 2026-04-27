@@ -5,18 +5,26 @@ import type { RecuperarSenhaService } from "@/modules/auth/recuperar-senha/recup
 import type {
   RedefinirSenhaDto,
   SolicitarRecuperacaoSenhaDto,
-} from "@/modules/auth/recuperar-senha/recuperar-senha.types";
+} from "@/modules/auth/recuperar-senha/recuperar-senha.schemas";
 import { MENSAGENS } from "@/shared/constants/mensagens";
 import type { RespostaApiSucesso } from "@/shared/types/api.types";
+
+type MetodoService<T extends (...args: never[]) => unknown> = jest.Mock<
+  ReturnType<T>,
+  Parameters<T>
+>;
 
 describe("RecuperarSenhaController", () => {
   it("retorna mensagem generica ao solicitar recuperacao de senha", async () => {
     const body: SolicitarRecuperacaoSenhaDto = {
       email: "aluno@example.com",
     };
-    const forgotPassword = jest.fn<RecuperarSenhaService["forgotPassword"]>(
-      async () => undefined,
-    );
+    const forgotPassword: MetodoService<RecuperarSenhaService["forgotPassword"]> = jest
+      .fn<
+        ReturnType<RecuperarSenhaService["forgotPassword"]>,
+        Parameters<RecuperarSenhaService["forgotPassword"]>
+      >()
+      .mockResolvedValue(undefined);
     const controller = new RecuperarSenhaController({
       forgotPassword,
     } as unknown as RecuperarSenhaService);
@@ -42,9 +50,12 @@ describe("RecuperarSenhaController", () => {
       token: "reset-token",
       senha: "novaSenha123",
     };
-    const resetPassword = jest.fn<RecuperarSenhaService["resetPassword"]>(
-      async () => undefined,
-    );
+    const resetPassword: MetodoService<RecuperarSenhaService["resetPassword"]> = jest
+      .fn<
+        ReturnType<RecuperarSenhaService["resetPassword"]>,
+        Parameters<RecuperarSenhaService["resetPassword"]>
+      >()
+      .mockResolvedValue(undefined);
     const controller = new RecuperarSenhaController({
       resetPassword,
     } as unknown as RecuperarSenhaService);
@@ -67,11 +78,12 @@ describe("RecuperarSenhaController", () => {
 
   it("encaminha erro de solicitacao de recuperacao para o middleware", async () => {
     const erro = new Error("falha no reset");
-    const forgotPassword = jest.fn<RecuperarSenhaService["forgotPassword"]>(
-      async () => {
-        throw erro;
-      },
-    );
+    const forgotPassword: MetodoService<RecuperarSenhaService["forgotPassword"]> = jest
+      .fn<
+        ReturnType<RecuperarSenhaService["forgotPassword"]>,
+        Parameters<RecuperarSenhaService["forgotPassword"]>
+      >()
+      .mockRejectedValue(erro);
     const controller = new RecuperarSenhaController({
       forgotPassword,
     } as unknown as RecuperarSenhaService);
@@ -88,11 +100,12 @@ describe("RecuperarSenhaController", () => {
 
   it("encaminha erro de redefinicao para o middleware", async () => {
     const erro = new Error("token invalido");
-    const resetPassword = jest.fn<RecuperarSenhaService["resetPassword"]>(
-      async () => {
-        throw erro;
-      },
-    );
+    const resetPassword: MetodoService<RecuperarSenhaService["resetPassword"]> = jest
+      .fn<
+        ReturnType<RecuperarSenhaService["resetPassword"]>,
+        Parameters<RecuperarSenhaService["resetPassword"]>
+      >()
+      .mockRejectedValue(erro);
     const controller = new RecuperarSenhaController({
       resetPassword,
     } as unknown as RecuperarSenhaService);

@@ -9,21 +9,45 @@ import { RecuperarSenhaService } from "@/modules/auth/recuperar-senha/recuperar-
 import { MENSAGENS } from "@/shared/constants/mensagens";
 import { CodigoDeErro } from "@/shared/errors/codigos-de-erro";
 
-type EnviarEmailMock = (destinatario: string, linkRedefinicao: string) => Promise<void>;
+type MetodoRepository<T extends (...args: never[]) => unknown> = jest.Mock<
+  ReturnType<T>,
+  Parameters<T>
+>;
+
+type EnviarEmailMock = jest.Mock<Promise<void>, [string, string]>;
 
 function criarRepositoryMock() {
-  const buscarUsuarioPorEmail = jest.fn<RecuperarSenhaRepository["buscarUsuarioPorEmail"]>(
-    async () => null,
-  );
-  const criarTokenRedefinicaoSenha = jest.fn<
+  const buscarUsuarioPorEmail: MetodoRepository<RecuperarSenhaRepository["buscarUsuarioPorEmail"]> =
+    jest
+      .fn<
+        ReturnType<RecuperarSenhaRepository["buscarUsuarioPorEmail"]>,
+        Parameters<RecuperarSenhaRepository["buscarUsuarioPorEmail"]>
+      >()
+      .mockResolvedValue(null);
+  const criarTokenRedefinicaoSenha: MetodoRepository<
     RecuperarSenhaRepository["criarTokenRedefinicaoSenha"]
-  >(async () => undefined);
-  const buscarTokenRedefinicaoSenha = jest.fn<
+  > = jest
+    .fn<
+      ReturnType<RecuperarSenhaRepository["criarTokenRedefinicaoSenha"]>,
+      Parameters<RecuperarSenhaRepository["criarTokenRedefinicaoSenha"]>
+    >()
+    .mockResolvedValue(undefined);
+  const buscarTokenRedefinicaoSenha: MetodoRepository<
     RecuperarSenhaRepository["buscarTokenRedefinicaoSenha"]
-  >(async () => null);
-  const atualizarSenhaComToken = jest.fn<RecuperarSenhaRepository["atualizarSenhaComToken"]>(
-    async () => true,
-  );
+  > = jest
+    .fn<
+      ReturnType<RecuperarSenhaRepository["buscarTokenRedefinicaoSenha"]>,
+      Parameters<RecuperarSenhaRepository["buscarTokenRedefinicaoSenha"]>
+    >()
+    .mockResolvedValue(null);
+  const atualizarSenhaComToken: MetodoRepository<
+    RecuperarSenhaRepository["atualizarSenhaComToken"]
+  > = jest
+    .fn<
+      ReturnType<RecuperarSenhaRepository["atualizarSenhaComToken"]>,
+      Parameters<RecuperarSenhaRepository["atualizarSenhaComToken"]>
+    >()
+    .mockResolvedValue(true);
 
   return {
     repository: {
@@ -51,13 +75,14 @@ describe("RecuperarSenhaService", () => {
   });
 
   it("solicita reset com email existente, cria token de 1 hora e envia email", async () => {
-    const { repository, buscarUsuarioPorEmail, criarTokenRedefinicaoSenha } =
-      criarRepositoryMock();
+    const { repository, buscarUsuarioPorEmail, criarTokenRedefinicaoSenha } = criarRepositoryMock();
     buscarUsuarioPorEmail.mockResolvedValue({
       id: "usuario-id",
       email: "aluno@example.com",
     });
-    const enviarEmail = jest.fn<EnviarEmailMock>(async () => undefined);
+    const enviarEmail: EnviarEmailMock = jest
+      .fn<Promise<void>, [string, string]>()
+      .mockResolvedValue(undefined);
     const service = new RecuperarSenhaService(repository, enviarEmail);
 
     await service.forgotPassword({ email: " ALUNO@EXAMPLE.COM " });
@@ -75,12 +100,15 @@ describe("RecuperarSenhaService", () => {
   });
 
   it("solicita reset com email inexistente sem revelar existencia", async () => {
-    const { repository, buscarUsuarioPorEmail, criarTokenRedefinicaoSenha } =
-      criarRepositoryMock();
-    const enviarEmail = jest.fn<EnviarEmailMock>(async () => undefined);
+    const { repository, buscarUsuarioPorEmail, criarTokenRedefinicaoSenha } = criarRepositoryMock();
+    const enviarEmail: EnviarEmailMock = jest
+      .fn<Promise<void>, [string, string]>()
+      .mockResolvedValue(undefined);
     const service = new RecuperarSenhaService(repository, enviarEmail);
 
-    await expect(service.forgotPassword({ email: "naoexiste@example.com" })).resolves.toBeUndefined();
+    await expect(
+      service.forgotPassword({ email: "naoexiste@example.com" }),
+    ).resolves.toBeUndefined();
 
     expect(buscarUsuarioPorEmail).toHaveBeenCalledWith("naoexiste@example.com");
     expect(criarTokenRedefinicaoSenha).not.toHaveBeenCalled();

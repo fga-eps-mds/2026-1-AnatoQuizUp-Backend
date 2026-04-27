@@ -7,7 +7,7 @@ import type { RecuperarSenhaRepository } from "@/modules/auth/recuperar-senha/re
 import type {
   RedefinirSenhaDto,
   SolicitarRecuperacaoSenhaDto,
-} from "@/modules/auth/recuperar-senha/recuperar-senha.types";
+} from "@/modules/auth/recuperar-senha/recuperar-senha.schemas";
 import { MENSAGENS } from "@/shared/constants/mensagens";
 import { CodigoDeErro } from "@/shared/errors/codigos-de-erro";
 import { ErroAplicacao } from "@/shared/errors/erro-aplicacao";
