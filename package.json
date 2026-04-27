@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "tsx watch -r tsconfig-paths/register src/server.ts",
     "build": "tsc --project tsconfig.build.json && tsc-alias -p tsconfig.build.json",
-    "start": "node dist/src/server.js && npx prisma migrate deploy && node dist/server.js",
+    "start": "npx prisma migrate deploy && node dist/src/server.js",
     "lint": "eslint . --ext .ts",
     "test": "jest",
     "format": "prettier . --write",
