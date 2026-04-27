@@ -8,6 +8,7 @@ jest.mock("@/config/db", () => ({
   prisma: {
     $queryRaw: jest.fn(),
     $executeRaw: jest.fn(),
+    $transaction: jest.fn(),
   },
 }));
 
@@ -23,6 +24,9 @@ type ExecuteRawMock = (
 
 const queryRawMock = prisma.$queryRaw as unknown as jest.MockedFunction<QueryRawMock>;
 const executeRawMock = prisma.$executeRaw as unknown as jest.MockedFunction<ExecuteRawMock>;
+const transactionMock = prisma.$transaction as unknown as jest.MockedFunction<
+  <T>(callback: (transacao: { $executeRaw: ExecuteRawMock }) => Promise<T>) => Promise<T>
+>;
 
 function criarRegistroUsuario(overrides: Record<string, unknown> = {}) {
   return {
@@ -56,6 +60,7 @@ describe("SessaoRepository", () => {
   beforeEach(() => {
     queryRawMock.mockReset();
     executeRawMock.mockReset();
+    transactionMock.mockReset();
   });
 
   it("busca usuario por email e converte o registro do banco", async () => {
@@ -143,5 +148,74 @@ describe("SessaoRepository", () => {
     ).resolves.toBeUndefined();
 
     expect(executeRawMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("busca refresh token salvo", async () => {
+    const expiraEm = new Date("2026-05-02T12:00:00.000Z");
+    queryRawMock.mockResolvedValueOnce([
+      {
+        token: "refresh-token",
+        usuarioId: "usuario-id",
+        expiraEm,
+        revogadoEm: null,
+      },
+    ]);
+    const repository = new SessaoRepository();
+
+    await expect(repository.buscarRefreshToken("refresh-token")).resolves.toEqual({
+      token: "refresh-token",
+      usuarioId: "usuario-id",
+      expiraEm,
+      revogadoEm: null,
+    });
+    expect(queryRawMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("retorna null quando refresh token nao existe", async () => {
+    queryRawMock.mockResolvedValueOnce([]);
+    const repository = new SessaoRepository();
+
+    await expect(repository.buscarRefreshToken("refresh-token-inexistente")).resolves.toBeNull();
+  });
+
+  it("rotaciona refresh token antigo e salva novo token na mesma transacao", async () => {
+    const executeRawTransacao = jest
+      .fn<ExecuteRawMock>()
+      .mockResolvedValueOnce(1)
+      .mockResolvedValueOnce(1);
+    transactionMock.mockImplementationOnce(async (callback) =>
+      callback({ $executeRaw: executeRawTransacao }),
+    );
+    const repository = new SessaoRepository();
+
+    await expect(
+      repository.rotacionarRefreshToken(
+        "refresh-token-antigo",
+        "usuario-id",
+        "refresh-token-novo",
+        new Date("2026-05-02T12:00:00.000Z"),
+      ),
+    ).resolves.toBe(true);
+
+    expect(executeRawTransacao).toHaveBeenCalledTimes(2);
+  });
+
+  it("nao salva novo refresh token quando token antigo ja foi revogado", async () => {
+    const executeRawTransacao = jest.fn<ExecuteRawMock>().mockResolvedValueOnce(0);
+    transactionMock.mockImplementationOnce(async (callback) =>
+      callback({ $executeRaw: executeRawTransacao }),
+    );
+    const repository = new SessaoRepository();
+
+    await expect(
+      repository.rotacionarRefreshToken(
+        "refresh-token-antigo",
+        "usuario-id",
+        "refresh-token-novo",
+        new Date("2026-05-02T12:00:00.000Z"),
+      ),
+    ).resolves.toBe(false);
+
+    expect(executeRawTransacao).toHaveBeenCalledTimes(1);
   });
 });

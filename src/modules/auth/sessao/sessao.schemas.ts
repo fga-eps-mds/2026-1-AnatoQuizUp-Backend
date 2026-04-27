@@ -9,3 +9,7 @@ export const schemaLogin = z.object({
     .transform((email) => email.toLowerCase()),
   senha: z.string().min(1),
 });
+
+export const schemaRefreshToken = z.object({
+  refreshToken: z.string().trim().min(1),
+});

@@ -28,6 +28,7 @@ export const MENSAGENS = {
   cidadesListadas: "Cidades listadas com sucesso.",
   origemCorsNaoPermitida: "Origem nao permitida pelo CORS.",
   loginRealizado: "Login realizado com sucesso.",
+  sessaoRenovada: "Sessao renovada com sucesso.",
   usuarioAutenticadoEncontrado: "Usuario autenticado retornado com sucesso.",
   credenciaisInvalidas: "Email ou senha invalidos.",
   tokenInvalido: "Token invalido.",
