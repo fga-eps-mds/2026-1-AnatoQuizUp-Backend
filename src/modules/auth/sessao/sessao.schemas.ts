@@ -13,3 +13,5 @@ export const schemaLogin = z.object({
 export const schemaRefreshToken = z.object({
   refreshToken: z.string().trim().min(1),
 });
+
+export const schemaLogout = schemaRefreshToken;

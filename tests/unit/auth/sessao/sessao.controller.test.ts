@@ -3,6 +3,7 @@ import type { Request, Response } from "express";
 import { SessaoController } from "@/modules/auth/sessao/sessao.controller";
 import type {
   LoginDto,
+  LogoutDto,
   RefreshTokenDto,
   RespostaLoginDto,
   RespostaRenovarSessaoDto,
@@ -134,6 +135,37 @@ describe("SessaoController", () => {
     expect(next).not.toHaveBeenCalled();
   });
 
+  it("retorna 204 ao realizar logout", async () => {
+    const body: LogoutDto = {
+      refreshToken: "refresh-token",
+    };
+    const logout = jest.fn<SessaoService["logout"]>().mockResolvedValue(undefined);
+    const controller = new SessaoController({
+      logout,
+    } as unknown as SessaoService);
+    const request = {
+      body,
+      usuario: {
+        id: "usuario-id",
+        email: "joao@aluno.unb.br",
+        papel: PAPEIS.ALUNO,
+      },
+    } as Request<unknown, unknown, LogoutDto>;
+    const send = jest.fn();
+    const status = jest.fn(() => ({ send }));
+    const response = {
+      status,
+    } as unknown as Response<void>;
+    const next = jest.fn();
+
+    await controller.logout(request, response, next);
+
+    expect(logout).toHaveBeenCalledWith("usuario-id", body);
+    expect(status).toHaveBeenCalledWith(204);
+    expect(send).toHaveBeenCalledWith();
+    expect(next).not.toHaveBeenCalled();
+  });
+
   it("encaminha erro do service para o middleware de erro", async () => {
     const error = new Error("erro");
     const login = jest.fn<SessaoService["login"]>().mockRejectedValue(error);
@@ -165,6 +197,29 @@ describe("SessaoController", () => {
 
     await controller.renovarSessao(request, response, next);
 
+    expect(next).toHaveBeenCalledWith(error);
+  });
+
+  it("encaminha erro do service ao realizar logout", async () => {
+    const error = new Error("erro");
+    const logout = jest.fn<SessaoService["logout"]>().mockRejectedValue(error);
+    const controller = new SessaoController({
+      logout,
+    } as unknown as SessaoService);
+    const request = {
+      body: { refreshToken: "refresh-token" },
+      usuario: {
+        id: "usuario-id",
+        email: "joao@aluno.unb.br",
+        papel: PAPEIS.ALUNO,
+      },
+    } as Request<unknown, unknown, LogoutDto>;
+    const response = {} as Response<void>;
+    const next = jest.fn();
+
+    await controller.logout(request, response, next);
+
+    expect(logout).toHaveBeenCalledWith("usuario-id", { refreshToken: "refresh-token" });
     expect(next).toHaveBeenCalledWith(error);
   });
 
@@ -204,6 +259,29 @@ describe("SessaoController", () => {
     await controller.obterUsuarioAutenticado(request, response, next);
 
     expect(obterUsuarioAutenticado).not.toHaveBeenCalled();
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({
+        codigoStatus: 401,
+        codigo: CodigoDeErro.TOKEN_INVALIDO,
+        message: MENSAGENS.tokenInvalido,
+      }),
+    );
+  });
+
+  it("encaminha erro quando logout e chamado sem usuario autenticado", async () => {
+    const logout = jest.fn<SessaoService["logout"]>();
+    const controller = new SessaoController({
+      logout,
+    } as unknown as SessaoService);
+    const request = {
+      body: { refreshToken: "refresh-token" },
+    } as Request<unknown, unknown, LogoutDto>;
+    const response = {} as Response<void>;
+    const next = jest.fn();
+
+    await controller.logout(request, response, next);
+
+    expect(logout).not.toHaveBeenCalled();
     expect(next).toHaveBeenCalledWith(
       expect.objectContaining({
         codigoStatus: 401,
