@@ -9,6 +9,7 @@
     "build": "tsc --project tsconfig.json && tsc-alias -p tsconfig.json",
     "start": "node dist/src/server.js",
     "lint": "eslint . --ext .ts",
+    "test": "jest",
     "format": "prettier . --write",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",

@@ -3,14 +3,30 @@ import { z } from "zod";
 
 dotenv.config();
 
+const ambienteAtual = process.env.NODE_ENV ?? "development";
+const ambienteTeste = ambienteAtual === "test";
+
+const variavelObrigatoria = (nome: string) => z.string().min(1, `${nome} is required.`);
+const variavelComDefaultDeTeste = (nome: string, valorPadraoTeste: string) =>
+  ambienteTeste ? z.string().min(1).default(valorPadraoTeste) : variavelObrigatoria(nome);
+
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().positive().default(3333),
-  DATABASE_URL: z.string().min(1, "DATABASE_URL is required."),
+  DATABASE_URL: variavelComDefaultDeTeste(
+    "DATABASE_URL",
+    "postgresql://postgres:postgres@localhost:5432/postgres?schema=public",
+  ),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
-  JWT_SECRET_KEY: z.string(),
-  JWT_REFRESH_SECRET_KEY: z.string(),
-  JWT_PASSWORD_REDEFINITION_SECRET_KEY: z.string(),
+  JWT_SECRET_KEY: variavelComDefaultDeTeste("JWT_SECRET_KEY", "test-secret"),
+  JWT_REFRESH_SECRET_KEY: variavelComDefaultDeTeste(
+    "JWT_REFRESH_SECRET_KEY",
+    "test-refresh-secret",
+  ),
+  JWT_PASSWORD_REDEFINITION_SECRET_KEY: variavelComDefaultDeTeste(
+    "JWT_PASSWORD_REDEFINITION_SECRET_KEY",
+    "test-password-redefinition-secret",
+  ),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
@@ -23,26 +39,6 @@ if (!parsedEnv.success) {
 
 export const env = parsedEnv.data;
 
-type CustomEnv = {
-  JWT_SECRET_KEY: string;
-  JWT_REFRESH_SECRET_KEY: string;
-  JWT_PASSWORD_REDEFINITION_SECRET_KEY: string;
-  PORT: number;
-};
-
-function getEnvVariable(key: keyof CustomEnv): string | number {
-  const value = process.env[key];
-  if (!value) {
-    throw new Error(`Environment variable ${key} is not set.`);
-  }
-  if (key === "PORT") {
-    return parseInt(value, 10);
-  }
-  return value;
-}
-
-export const jwtSecretKey = getEnvVariable("JWT_SECRET_KEY") as string;
-export const jwtRefreshSecretKey = getEnvVariable("JWT_REFRESH_SECRET_KEY") as string;
-export const jwtPasswordRedefinitionSecretKey = getEnvVariable(
-  "JWT_PASSWORD_REDEFINITION_SECRET_KEY",
-) as string;
+export const jwtSecretKey = env.JWT_SECRET_KEY;
+export const jwtRefreshSecretKey = env.JWT_REFRESH_SECRET_KEY;
+export const jwtPasswordRedefinitionSecretKey = env.JWT_PASSWORD_REDEFINITION_SECRET_KEY;
