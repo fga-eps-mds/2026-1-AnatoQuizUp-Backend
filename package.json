@@ -64,5 +64,17 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.1",
     "vitest": "^4.1.5"
+  },
+  "jest": {
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "json-summary"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.{js,jsx,ts,tsx}",
+      "!src/**/*.d.ts",
+      "!src/**/index.{js,ts}"
+    ]
   }
 }
