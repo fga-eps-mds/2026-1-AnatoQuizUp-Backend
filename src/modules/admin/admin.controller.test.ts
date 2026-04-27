@@ -126,4 +126,90 @@ describe("AdminController", () => {
       dados: usuario,
     });
   });
+  test("listar encaminha erro do service para o middleware", async () => {
+    const erro = new Error("falha ao listar");
+    adminService.listar.mockRejectedValue(erro);
+
+    const request = {
+      query: { page: 1, limit: 10 },
+    } as Request<unknown, unknown, unknown, ListarUsersQueryDto>;
+    const { response } = criarResponseMock<RespostaPaginada<ListarUsersDto>>();
+
+    await controller.listar(request, response, next);
+
+    expect(next).toHaveBeenCalledWith(erro);
+  });
+
+  test("buscarPorId encaminha erro do service para o middleware", async () => {
+    const erro = new Error("falha ao buscar");
+    adminService.buscarPorId.mockRejectedValue(erro);
+
+    const request = { params: { id: "user-1" } } as Request<{ id: string }>;
+    const { response } = criarResponseMock<RespostaApiSucesso<RespostaUserDto>>();
+
+    await controller.buscarPorId(request, response, next);
+
+    expect(next).toHaveBeenCalledWith(erro);
+  });
+
+  test("alterarStatus usa primeiro valor de headers repetidos", async () => {
+    const usuario = criarUsuarioResposta({ status: "INATIVO" });
+    adminService.alterarStatus.mockResolvedValue(usuario);
+
+    const request = {
+      params: { id: "user-1" },
+      body: { status: "INACTIVE" } satisfies AlterarStatusUserDto,
+      headers: {
+        "x-usuario-id": ["admin-1", "admin-2"],
+        "x-usuario-perfil": ["ADMIN", "ALUNO"],
+      },
+    } as unknown as Request<{ id: string }, unknown, AlterarStatusUserDto>;
+    const { response } = criarResponseMock<RespostaApiSucesso<RespostaUserDto>>();
+
+    await controller.alterarStatus(request, response, next);
+
+    expect(adminService.alterarStatus).toHaveBeenCalledWith(
+      "user-1",
+      { status: "INACTIVE" },
+      { id: "admin-1", perfil: "ADMIN" },
+    );
+  });
+
+  test("alterarStatus normaliza contexto ausente ou nao admin", async () => {
+    const usuario = criarUsuarioResposta({ status: "INATIVO" });
+    adminService.alterarStatus.mockResolvedValue(usuario);
+
+    const request = {
+      params: { id: "user-1" },
+      body: { status: "INACTIVE" } satisfies AlterarStatusUserDto,
+      headers: {
+        "x-usuario-perfil": "ALUNO",
+      },
+    } as unknown as Request<{ id: string }, unknown, AlterarStatusUserDto>;
+    const { response } = criarResponseMock<RespostaApiSucesso<RespostaUserDto>>();
+
+    await controller.alterarStatus(request, response, next);
+
+    expect(adminService.alterarStatus).toHaveBeenCalledWith(
+      "user-1",
+      { status: "INACTIVE" },
+      { id: null, perfil: null },
+    );
+  });
+
+  test("alterarStatus encaminha erro do service para o middleware", async () => {
+    const erro = new Error("falha ao alterar status");
+    adminService.alterarStatus.mockRejectedValue(erro);
+
+    const request = {
+      params: { id: "user-1" },
+      body: { status: "INACTIVE" } satisfies AlterarStatusUserDto,
+      headers: {},
+    } as unknown as Request<{ id: string }, unknown, AlterarStatusUserDto>;
+    const { response } = criarResponseMock<RespostaApiSucesso<RespostaUserDto>>();
+
+    await controller.alterarStatus(request, response, next);
+
+    expect(next).toHaveBeenCalledWith(erro);
+  });
 });
