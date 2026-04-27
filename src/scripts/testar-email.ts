@@ -6,7 +6,9 @@ async function main() {
   const token = process.argv[3] ?? "teste-manual";
 
   if (!destinatario) {
-    console.error("Uso: npx tsx -r tsconfig-paths/register src/scripts/testar-email.ts <email> [token]");
+    console.error(
+      "Uso: npx tsx -r tsconfig-paths/register src/scripts/testar-email.ts <email> [token]",
+    );
     process.exit(1);
   }
 

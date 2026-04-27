@@ -11,4 +11,3 @@ const alunoNacionalidadesRouter = Router();
 alunoNacionalidadesRouter.get("/", nacionalidadesController.listarNacionalidades);
 
 export { alunoNacionalidadesRouter };
-

@@ -1,4 +1,3 @@
-
 import { schemaBuscarCidadesPorUf } from "@/modules/auth/aluno/localidades/localidades.schemas";
 
 describe("schemaBuscarCidadesPorUf", () => {

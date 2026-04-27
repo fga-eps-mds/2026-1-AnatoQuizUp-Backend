@@ -6,4 +6,3 @@ export class AlunoNacionalidadesService {
     return [...NACIONALIDADES_ALUNO_OPCOES];
   }
 }
-

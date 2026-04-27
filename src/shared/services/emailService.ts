@@ -1,6 +1,3 @@
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-
 import { BrevoClient } from "@getbrevo/brevo";
 
 import { env } from "@/config/env";
@@ -11,19 +8,6 @@ const clienteBrevo = new BrevoClient({
   timeoutInSeconds: 30,
   maxRetries: 2,
 });
-
-function obterLogoEmailEmDataUrl() {
-  const caminhoLogo = join(process.cwd(), "src", "shared", "assets", "email", "logo.png");
-
-  if (!existsSync(caminhoLogo)) {
-    logger.warn({ caminhoLogo }, "Logo de email nao encontrada. Template usara cabecalho textual.");
-    return null;
-  }
-
-  const conteudoLogo = readFileSync(caminhoLogo);
-
-  return `data:image/png;base64,${conteudoLogo.toString("base64")}`;
-}
 
 // Versão em HTML e texto puro para compatibilidade com clientes de email que nao renderizam HTML
 function criarConteudoTextoRedefinicaoSenha(linkRedefinicao: string) {
@@ -40,23 +24,14 @@ function criarConteudoTextoRedefinicaoSenha(linkRedefinicao: string) {
 }
 
 function criarConteudoHtmlRedefinicaoSenha(linkRedefinicao: string) {
-  const logoEmail = obterLogoEmailEmDataUrl();
-  const cabecalho = logoEmail
-    ? `
-          <img
-            src="${logoEmail}"
-            alt="Logo do AnatoQuizUp"
-            style="display: block; max-width: 220px; width: 100%; height: auto;"
-          />
-      `
-    : `<p style="margin: 0; font-size: 24px; font-weight: 700; color: #0a1128;">AnatoQuizUp</p>`;
-
   return `
     <html lang="pt-BR">
       <body style="margin: 0; padding: 24px; background-color: #f4f7fb; font-family: Arial, sans-serif; color: #0f172a;">
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; padding: 32px; border: 1px solid #dbe4f0;">
           <div style="margin-bottom: 24px;">
-            ${cabecalho}
+            <p style="margin: 0; font-size: 24px; font-weight: 700; color: #0a1128;">
+              AnatoQuizUp
+            </p>
           </div>
 
           <p style="margin: 0 0 16px; font-size: 16px; line-height: 1.6;">

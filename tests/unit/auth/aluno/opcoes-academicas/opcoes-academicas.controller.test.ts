@@ -40,11 +40,11 @@ describe("AlunoOpcoesAcademicasController", () => {
 
   it("encaminha erro da listagem para o middleware de erro", async () => {
     const erro = new Error("falha ao listar opcoes academicas");
-    const listarOpcoesAcademicas = jest.fn<
-      AlunoOpcoesAcademicasService["listarOpcoesAcademicas"]
-    >(() => {
-      throw erro;
-    });
+    const listarOpcoesAcademicas = jest.fn<AlunoOpcoesAcademicasService["listarOpcoesAcademicas"]>(
+      () => {
+        throw erro;
+      },
+    );
     const controller = new AlunoOpcoesAcademicasController({
       listarOpcoesAcademicas,
     } as unknown as AlunoOpcoesAcademicasService);
@@ -63,4 +63,3 @@ describe("AlunoOpcoesAcademicasController", () => {
     expect(json).not.toHaveBeenCalled();
   });
 });
-
