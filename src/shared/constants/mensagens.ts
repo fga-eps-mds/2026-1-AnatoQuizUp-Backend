@@ -9,7 +9,13 @@ export const MENSAGENS = {
   usuarioCadastrado: "Usuario cadastrado com sucesso.",
   emailJaCadastrado: "Ja existe um usuario cadastrado com este email.",
   nicknameJaCadastrado: "Ja existe um usuario cadastrado com este nickname.",
+  nacionalidadesListadas: "Nacionalidades listadas com sucesso.",
+  opcoesAcademicasListadas: "Opcoes academicas listadas com sucesso.",
+  emailDisponivel: "Email disponivel para uso.",
   nicknameDisponivel: "Nickname disponivel para uso.",
+  estadosListados: "Estados listados com sucesso.",
+  cidadesListadas: "Cidades listadas com sucesso.",
+  origemCorsNaoPermitida: "Origem nao permitida pelo CORS.",
   autenticacaoNaoImplementada: "O middleware de autenticacao ainda nao foi implementado.",
   permissaoPorPapelNaoImplementada:
     "O middleware de permissao por papel ainda nao foi implementado.",
