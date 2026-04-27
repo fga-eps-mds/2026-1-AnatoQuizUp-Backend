@@ -11,7 +11,7 @@ module.exports = {
   },
   setupFiles: ["<rootDir>/jest.setup.js"],
   testEnvironment: "node",
-  testMatch: ["<rootDir>/src/**/*.test.ts"],
+  testMatch: ["<rootDir>/src/**/*.test.ts", "<rootDir>/tests/**/*.test.ts"],
   transform: {
     "^.+\\.ts$": "babel-jest",
   },
