@@ -27,6 +27,13 @@ export const MENSAGENS = {
   estadosListados: "Estados listados com sucesso.",
   cidadesListadas: "Cidades listadas com sucesso.",
   origemCorsNaoPermitida: "Origem nao permitida pelo CORS.",
+  loginRealizado: "Login realizado com sucesso.",
+  usuarioAutenticadoEncontrado: "Usuario autenticado retornado com sucesso.",
+  credenciaisInvalidas: "Email ou senha invalidos.",
+  tokenInvalido: "Token invalido.",
+  cadastroEmAnalise: "Seu cadastro esta em analise pelo administrador.",
+  contaDesativada: "Conta desativada. Entre em contato com o administrador.",
+  cadastroRecusado: "Cadastro recusado. Entre em contato com o administrador.",
   autenticacaoNaoImplementada: "O middleware de autenticacao ainda nao foi implementado.",
   permissaoPorPapelNaoImplementada:
     "O middleware de permissao por papel ainda nao foi implementado.",
