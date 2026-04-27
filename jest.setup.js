@@ -4,3 +4,6 @@ process.env.DATABASE_URL ||=
 process.env.JWT_SECRET_KEY ||= "test-secret";
 process.env.JWT_REFRESH_SECRET_KEY ||= "test-refresh-secret";
 process.env.JWT_PASSWORD_REDEFINITION_SECRET_KEY ||= "test-password-redefinition-secret";
+process.env.BREVO_API_KEY ||= "test-brevo-api-key";
+process.env.EMAIL_FROM ||= "noreply@example.com";
+process.env.FRONTEND_PROD_URL ||= "https://example.com";
