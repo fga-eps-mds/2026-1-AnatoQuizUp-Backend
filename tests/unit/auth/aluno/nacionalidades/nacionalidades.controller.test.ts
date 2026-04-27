@@ -31,5 +31,26 @@ describe("AlunoNacionalidadesController", () => {
     });
     expect(next).not.toHaveBeenCalled();
   });
+
+  it("encaminha erro da listagem para o middleware de erro", async () => {
+    const erro = new Error("falha ao listar nacionalidades");
+    const listarNacionalidades = jest.fn<AlunoNacionalidadesService["listarNacionalidades"]>(() => {
+      throw erro;
+    });
+    const controller = new AlunoNacionalidadesController({
+      listarNacionalidades,
+    } as unknown as AlunoNacionalidadesService);
+    const request = {} as Request;
+    const json = jest.fn();
+    const status = jest.fn(() => ({ json }));
+    const response = { status } as unknown as Response<RespostaApiSucesso<NacionalidadesAlunoDto>>;
+    const next = jest.fn();
+
+    await controller.listarNacionalidades(request, response, next);
+
+    expect(next).toHaveBeenCalledWith(erro);
+    expect(status).toHaveBeenCalledWith(200);
+    expect(json).not.toHaveBeenCalled();
+  });
 });
 

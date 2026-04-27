@@ -129,4 +129,63 @@ describe("AlunoAuthController", () => {
     });
     expect(next).not.toHaveBeenCalled();
   });
+
+  it("encaminha erro do cadastro para o middleware de erro", async () => {
+    const erro = new Error("falha no cadastro");
+    const registrar = jest.fn<AlunoAuthService["registrar"]>().mockRejectedValue(erro);
+    const controller = new AlunoAuthController({
+      registrar,
+    } as unknown as AlunoAuthService);
+    const request = { body: {} } as Request<unknown, unknown, RegistrarAlunoDto>;
+    const status = jest.fn();
+    const response = { status } as unknown as Response<RespostaApiSucesso<RespostaAlunoDto>>;
+    const next = jest.fn();
+
+    await controller.registrar(request, response, next);
+
+    expect(next).toHaveBeenCalledWith(erro);
+    expect(status).not.toHaveBeenCalled();
+  });
+
+  it("encaminha erro da disponibilidade de nickname para o middleware de erro", async () => {
+    const erro = new Error("falha ao consultar nickname");
+    const verificarNicknameDisponivel = jest
+      .fn<AlunoAuthService["verificarNicknameDisponivel"]>()
+      .mockRejectedValue(erro);
+    const controller = new AlunoAuthController({
+      verificarNicknameDisponivel,
+    } as unknown as AlunoAuthService);
+    const request = {
+      query: { nickname: "joao_junior" },
+    } as Request<unknown, unknown, unknown, DisponibilidadeNicknameAlunoDto>;
+    const status = jest.fn();
+    const response = { status } as unknown as Response<RespostaApiSucesso<unknown>>;
+    const next = jest.fn();
+
+    await controller.verificarNicknameDisponivel(request, response, next);
+
+    expect(next).toHaveBeenCalledWith(erro);
+    expect(status).not.toHaveBeenCalled();
+  });
+
+  it("encaminha erro da disponibilidade de email para o middleware de erro", async () => {
+    const erro = new Error("falha ao consultar email");
+    const verificarEmailDisponivel = jest
+      .fn<AlunoAuthService["verificarEmailDisponivel"]>()
+      .mockRejectedValue(erro);
+    const controller = new AlunoAuthController({
+      verificarEmailDisponivel,
+    } as unknown as AlunoAuthService);
+    const request = {
+      query: { email: "joao.junior@aluno.unb.br" },
+    } as Request<unknown, unknown, unknown, DisponibilidadeEmailAlunoDto>;
+    const status = jest.fn();
+    const response = { status } as unknown as Response<RespostaApiSucesso<unknown>>;
+    const next = jest.fn();
+
+    await controller.verificarEmailDisponivel(request, response, next);
+
+    expect(next).toHaveBeenCalledWith(erro);
+    expect(status).not.toHaveBeenCalled();
+  });
 });
