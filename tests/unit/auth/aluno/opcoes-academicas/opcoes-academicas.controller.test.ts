@@ -1,0 +1,66 @@
+import type { Request, Response } from "express";
+
+import type { OpcoesAcademicasAlunoDto } from "@/modules/auth/aluno/opcoes-academicas/dto/resposta.opcoes-academicas.types";
+import { AlunoOpcoesAcademicasController } from "@/modules/auth/aluno/opcoes-academicas/opcoes-academicas.controller";
+import type { AlunoOpcoesAcademicasService } from "@/modules/auth/aluno/opcoes-academicas/opcoes-academicas.service";
+import { MENSAGENS } from "@/shared/constants/mensagens";
+import type { RespostaApiSucesso } from "@/shared/types/api.types";
+
+describe("AlunoOpcoesAcademicasController", () => {
+  it("retorna 200 com opcoes academicas no formato padrao da API", async () => {
+    const opcoes: OpcoesAcademicasAlunoDto = {
+      escolaridades: ["Graduação"],
+      instituicoes: ["Universidade de Brasilia"],
+      cursos: ["Medicina"],
+      periodos: ["1o Periodo"],
+      naoSeAplica: "Não se aplica",
+    };
+    const listarOpcoesAcademicas = jest
+      .fn<AlunoOpcoesAcademicasService["listarOpcoesAcademicas"]>()
+      .mockReturnValue(opcoes);
+    const controller = new AlunoOpcoesAcademicasController({
+      listarOpcoesAcademicas,
+    } as unknown as AlunoOpcoesAcademicasService);
+    const request = {} as Request;
+    const json = jest.fn();
+    const status = jest.fn(() => ({ json }));
+    const response = { status } as unknown as Response<RespostaApiSucesso<typeof opcoes>>;
+    const next = jest.fn();
+
+    await controller.listarOpcoesAcademicas(request, response, next);
+
+    expect(listarOpcoesAcademicas).toHaveBeenCalled();
+    expect(status).toHaveBeenCalledWith(200);
+    expect(json).toHaveBeenCalledWith({
+      mensagem: MENSAGENS.opcoesAcademicasListadas,
+      dados: opcoes,
+    });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("encaminha erro da listagem para o middleware de erro", async () => {
+    const erro = new Error("falha ao listar opcoes academicas");
+    const listarOpcoesAcademicas = jest.fn<
+      AlunoOpcoesAcademicasService["listarOpcoesAcademicas"]
+    >(() => {
+      throw erro;
+    });
+    const controller = new AlunoOpcoesAcademicasController({
+      listarOpcoesAcademicas,
+    } as unknown as AlunoOpcoesAcademicasService);
+    const request = {} as Request;
+    const json = jest.fn();
+    const status = jest.fn(() => ({ json }));
+    const response = {
+      status,
+    } as unknown as Response<RespostaApiSucesso<OpcoesAcademicasAlunoDto>>;
+    const next = jest.fn();
+
+    await controller.listarOpcoesAcademicas(request, response, next);
+
+    expect(next).toHaveBeenCalledWith(erro);
+    expect(status).toHaveBeenCalledWith(200);
+    expect(json).not.toHaveBeenCalled();
+  });
+});
+

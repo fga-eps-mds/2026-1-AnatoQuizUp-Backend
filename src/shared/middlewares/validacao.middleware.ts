@@ -1,4 +1,4 @@
-import type { Request, RequestHandler } from "express";
+import type { RequestHandler } from "express";
 import { z } from "zod";
 import type { ZodType } from "zod";
 
@@ -26,7 +26,12 @@ export function validarRequisicao<T>(
       );
     }
 
-    (request as Request & Record<AlvoValidacao, unknown>)[alvo] = validacao.data;
+    Object.defineProperty(request, alvo, {
+      value: validacao.data,
+      configurable: true,
+      enumerable: true,
+      writable: true,
+    });
 
     return next();
   };

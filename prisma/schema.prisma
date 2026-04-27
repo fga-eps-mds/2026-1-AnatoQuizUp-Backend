@@ -31,6 +31,7 @@ enum StatusUsuario {
 }
 
 enum NivelEducacional {
+  ENSINO_FUNDAMENTAL
   ENSINO_MEDIO
   GRADUACAO
   POS_GRADUACAO
@@ -42,6 +43,7 @@ enum NivelEducacional {
 model Usuario {
   id    String @id @default(cuid())
   nome  String
+  nickname String? @unique
   email String @unique
   senha String
 
@@ -51,7 +53,7 @@ model Usuario {
   // Campos específicos de aluno
   instituicao      String?
   curso            String?
-  semestre         Int?
+  semestre         String?
   estado           String?
   cidade           String?
   nacionalidade    String?

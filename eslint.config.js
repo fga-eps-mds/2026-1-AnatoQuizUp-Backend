@@ -3,7 +3,7 @@ const eslintConfigPrettier = require("eslint-config-prettier");
 
 module.exports = tseslint.config(
   {
-    ignores: ["dist/**", "node_modules/**", "eslint.config.js"],
+    ignores: ["coverage/**", "dist/**", "node_modules/**", "eslint.config.js"],
   },
   ...tseslint.configs.recommended,
   eslintConfigPrettier,
