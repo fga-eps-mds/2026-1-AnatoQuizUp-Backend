@@ -17,11 +17,7 @@ const exemploController = new ExemploController(exemploService);
 const exemploRouter = Router();
 
 exemploRouter.post("/", validarRequisicao(schemaCriarExemplo), exemploController.criar);
-exemploRouter.get(
-  "/",
-  validarRequisicao(schemaListarExemplos, "query"),
-  exemploController.listar,
-);
+exemploRouter.get("/", validarRequisicao(schemaListarExemplos, "query"), exemploController.listar);
 exemploRouter.get(
   "/:id",
   validarRequisicao(schemaBuscarPorIdExemplo, "params"),
