@@ -1,4 +1,3 @@
-import { describe, expect, it } from "vitest";
 
 import { AlunoNacionalidadesService } from "@/modules/auth/aluno/nacionalidades/nacionalidades.service";
 import { NACIONALIDADES_ALUNO_OPCOES } from "@/shared/constants/nacionalidades";

@@ -15,8 +15,8 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "types": ["node"]
+    "types": ["jest", "node"]
   },
-  "include": ["src/**/*.ts", "prisma/**/*.ts", "tests/**/*.ts", "vitest.config.ts"],
+  "include": ["src/**/*.ts", "prisma/**/*.ts", "tests/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }

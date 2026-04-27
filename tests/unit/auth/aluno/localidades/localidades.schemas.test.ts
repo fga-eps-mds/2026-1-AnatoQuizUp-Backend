@@ -1,4 +1,3 @@
-import { describe, expect, it } from "vitest";
 
 import { schemaBuscarCidadesPorUf } from "@/modules/auth/aluno/localidades/localidades.schemas";
 

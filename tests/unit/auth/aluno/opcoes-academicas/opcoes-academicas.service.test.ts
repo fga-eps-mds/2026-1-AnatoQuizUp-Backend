@@ -1,4 +1,3 @@
-import { describe, expect, it } from "vitest";
 
 import { AlunoOpcoesAcademicasService } from "@/modules/auth/aluno/opcoes-academicas/opcoes-academicas.service";
 import {
