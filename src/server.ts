@@ -8,7 +8,7 @@ async function iniciarServidor() {
   await conectarBancoDeDados();
 
   // Sobe o servidor
-  const servidorHttp = aplicacao.listen(env.PORT, () => {
+  const servidorHttp = aplicacao.listen(env.PORT, "0.0.0.0", () => {
     logger.info({ port: env.PORT }, "Servidor em execucao.");
   });
 

@@ -10,6 +10,8 @@ FROM node:24-alpine AS build
 
 WORKDIR /app
 
+ENV DATABASE_URL="postgresql://postgres:postgres@localhost:5432/postgres?schema=public"
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
@@ -33,4 +35,4 @@ COPY --from=build /app/node_modules/@prisma ./node_modules/@prisma
 
 EXPOSE 3333
 
-CMD ["node", "dist/src/server.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/server.js"]
