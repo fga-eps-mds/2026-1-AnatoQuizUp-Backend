@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 
 import { PAPEIS } from "../../constants/papeis";
+import { STATUS } from "@/shared/constants/status";
 import {
   jwtSecretKey,
   jwtRefreshSecretKey,
@@ -18,7 +19,7 @@ const payload_autenticacao: PayloadAutenticacao = {
   id: "uuid",
   email: "email@domain",
   papel: PAPEIS.ALUNO,
-  status: "ACTIVE",
+  status: STATUS.ATIVO,
 };
 
 describe("Testa utilitários JTW", () => {
