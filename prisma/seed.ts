@@ -43,6 +43,32 @@ async function main() {
     },
   });
 
+  const professorEmail = process.env.PROFESSOR_EMAIL ?? "professor@anatoquizup.com";
+  const professorPassword = process.env.PROFESSOR_PASSWORD ?? "professor123";
+
+  const senhaProfessorHash = await bcrypt.hash(professorPassword, 10);
+
+  await prisma.usuario.upsert({
+    where: { email: professorEmail },
+    update: {
+      nome: "Professor Seed",
+      senha: senhaProfessorHash,
+      perfil: PerfilUsuario.PROFESSOR,
+      status: StatusUsuario.ATIVO,
+      departamento: "Departamento de Anatomia",
+      siape: "0000001",
+    },
+    create: {
+      nome: "Professor Seed",
+      email: professorEmail,
+      senha: senhaProfessorHash,
+      perfil: PerfilUsuario.PROFESSOR,
+      status: StatusUsuario.ATIVO,
+      departamento: "Departamento de Anatomia",
+      siape: "0000001",
+    },
+  });
+
   console.log("Seed executado com sucesso.");
 }
 
