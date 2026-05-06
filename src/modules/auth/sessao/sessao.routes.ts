@@ -19,13 +19,17 @@ const sessaoRouter = Router();
 
 sessaoRouter.post("/login", validarRequisicao(schemaLogin), sessaoController.login);
 sessaoRouter.post(
-  "/refresh",
+  "/atualizar-token",
   validarRequisicao(schemaRefreshToken),
   sessaoController.renovarSessao,
 );
-sessaoRouter.get("/me", middlewareAutenticacao, sessaoController.obterUsuarioAutenticado);
+sessaoRouter.get(
+  "/usuario-atual",
+  middlewareAutenticacao,
+  sessaoController.obterUsuarioAutenticado,
+);
 sessaoRouter.post(
-  "/logout",
+  "/sair",
   middlewareAutenticacao,
   validarRequisicao(schemaLogout),
   sessaoController.logout,

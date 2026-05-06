@@ -247,7 +247,7 @@ describe("SessaoController", () => {
     expect(next).toHaveBeenCalledWith(error);
   });
 
-  it("encaminha erro quando /me e chamado sem usuario autenticado", async () => {
+  it("encaminha erro quando usuario atual e chamado sem usuario autenticado", async () => {
     const obterUsuarioAutenticado = jest.fn<SessaoService["obterUsuarioAutenticado"]>();
     const controller = new SessaoController({
       obterUsuarioAutenticado,

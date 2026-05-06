@@ -34,7 +34,7 @@ alunoAuthRouter.get(
 );
 
 alunoAuthRouter.post(
-  "/register",
+  "/cadastro",
   validarRequisicao(schemaRegistrarAluno),
   alunoAuthController.registrar,
 );
