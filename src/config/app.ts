@@ -13,6 +13,7 @@ import { CodigoDeErro } from "@/shared/errors/codigos-de-erro";
 import { middlewareAutenticacao } from "@/shared/middlewares/autenticacao.middleware";
 import { middlewareTratamentoErros } from "@/shared/middlewares/tratamento-erros.middleware";
 import { adminRouter } from "@/modules/admin/admin.routes";
+import uploadRoute from "../modules/question/testeUpdateImage";
 
 const aplicacao = express();
 const roteadorApi = Router();
@@ -31,7 +32,7 @@ aplicacao.get("/health", (_request, response) => {
     },
   });
 });
-
+aplicacao.use("/api", uploadRoute)
 roteadorApi.use("/auth", authRouter);
 roteadorApi.use(middlewareAutenticacao);
 roteadorApi.use("/exemplos", exemploRouter);
