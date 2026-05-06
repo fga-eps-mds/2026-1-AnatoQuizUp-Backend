@@ -39,7 +39,7 @@ describe("emailService", () => {
 
     await enviarEmailRedefinicaoSenha(
       "aluno@example.com",
-      "https://app.example.com/reset-password?token=abc",
+      "https://app.example.com/redefinir-senha?token=abc",
     );
 
     expect(mockSendTransacEmail).toHaveBeenCalledWith(
@@ -50,7 +50,7 @@ describe("emailService", () => {
           email: "noreply@example.com",
         },
         to: [{ email: "aluno@example.com" }],
-        htmlContent: expect.stringContaining("https://app.example.com/reset-password?token=abc"),
+        htmlContent: expect.stringContaining("https://app.example.com/redefinir-senha?token=abc"),
         textContent: expect.stringContaining("Este link expira em 1 hora."),
       }),
     );
@@ -74,7 +74,7 @@ describe("emailService", () => {
     await expect(
       enviarEmailRedefinicaoSenha(
         "aluno@example.com",
-        "https://app.example.com/reset-password?token=abc",
+        "https://app.example.com/redefinir-senha?token=abc",
       ),
     ).rejects.toThrow("Falha ao enviar email de redefinicao de senha.");
     expect(loggerMock.error).toHaveBeenCalledWith(

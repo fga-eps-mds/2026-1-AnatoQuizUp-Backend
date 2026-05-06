@@ -11,18 +11,15 @@ import { verificarTokenJwt } from "@/shared/utils/jwt";
 
 const ROTAS_PUBLICAS = new Set([
   "/autenticacao/cadastro",
-  "/autenticacao/esqueci-senha",
   "/autenticacao/login",
+  "/autenticacao/recuperar-senha",
   "/autenticacao/redefinir-senha",
-  "/autenticacao/refresh",
+  "/autenticacao/atualizar-token",
   "/cadastro",
-  "/esqueci-senha",
-  "/forgot-password",
   "/login",
   "/redefinir-senha",
-  "/refresh",
-  "/register",
-  "/reset-password",
+  "/recuperar-senha",
+  "/atualizar-token",
 ]);
 
 function normalizarCaminho(caminho: string | undefined): string {
