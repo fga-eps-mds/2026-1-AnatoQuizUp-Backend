@@ -6,16 +6,21 @@ import crypto from 'crypto';
 const router = Router();
 
 const s3Client = new S3Client({
-  endpoint: 'http://localhost:9000',
+  endpoint: process.env.MINIO_ENDPOINT || 'http://localhost:9000',
   region: 'us-east-1',
   credentials: {
-    accessKeyId: process.env.MINIO_ROOT_USER || 'admin_local', 
-    secretAccessKey: process.env.MINIO_ROOT_PASSWORD || 'senha_super_secreta_123',
+    accessKeyId: process.env.MINIO_ROOT_USER as string, 
+    secretAccessKey: process.env.MINIO_ROOT_PASSWORD as string,
   },
   forcePathStyle: true,
 });
 
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+  }
+});
 
 router.post('/upload', upload.single('imagem'), async (req: Request, res: Response): Promise<Response> => {
   try {
