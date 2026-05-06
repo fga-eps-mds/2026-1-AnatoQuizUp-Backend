@@ -35,7 +35,6 @@ aplicacao.get("/health", (_request, response) => {
 
 // Toda chamada para /api/* precisa vir do BFF (X-Internal-Token).
 aplicacao.use("/api", middlewareTokenInterno);
-
 roteadorApi.use("/autenticacao", authRouter);
 roteadorApi.use(middlewareAutenticacao);
 roteadorApi.use("/exemplos", exemploRouter);
