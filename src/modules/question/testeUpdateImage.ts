@@ -1,56 +1,56 @@
-import { Router, type Request, type Response } from 'express';
+import { Router } from 'express';
+import type { Request, Response } from 'express';
 import multer from 'multer';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import crypto from 'crypto';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
-const router = Router();
+const uploadRoute = Router();
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024, files: 1 }
+});
+
+const isProd = process.env.NODE_ENV === 'production';
+const s3Endpoint = isProd 
+  ? process.env.MINIO_ENDPOINT 
+  : `${process.env.MINIO_ENDPOINT}:${process.env.MINIO_API_PORT}`;
 
 const s3Client = new S3Client({
-  endpoint: process.env.MINIO_ENDPOINT || 'http://localhost:9000',
+  endpoint: s3Endpoint, 
   region: 'us-east-1',
   credentials: {
-    accessKeyId: process.env.MINIO_ROOT_USER as string, 
-    secretAccessKey: process.env.MINIO_ROOT_PASSWORD as string,
+    accessKeyId: process.env.MINIO_ROOT_USER || '',
+    secretAccessKey: process.env.MINIO_ROOT_PASSWORD || '',
   },
   forcePathStyle: true,
 });
 
-const upload = multer({ 
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 5 * 1024 * 1024,
-  }
-});
-
-router.post('/upload', upload.single('imagem'), async (req: Request, res: Response): Promise<Response> => {
+uploadRoute.post('/upload', upload.single('imagem'), async (req: Request, res: Response) => {
   try {
-    const file = req.file; 
-    
-    if (!file) {
-      return res.status(400).json({ erro: 'Nenhuma imagem enviada.' });
-    }
+    const { file } = req;
+    if (!file) return res.status(400).json({ erro: 'Nenhuma imagem enviada.' });
 
-    const bucketName = 'anatoquizup-imagens'; 
-    
     const fileHash = crypto.randomBytes(8).toString('hex');
     const fileName = `${fileHash}-${file.originalname.replace(/\s/g, '-')}`;
 
     await s3Client.send(new PutObjectCommand({
-      Bucket: bucketName,
+      Bucket: 'anatoquizup-imagens',
       Key: fileName,
       Body: file.buffer,
       ContentType: file.mimetype,
     }));
 
-    return res.status(201).json({
-      mensagem: 'Sucesso!',
-      url: `http://localhost:9000/${bucketName}/${fileName}`
-    });
+   const currentIsProd = process.env.NODE_ENV === 'production';
+    const endpoint = process.env.MINIO_ENDPOINT;
+    const port = process.env.MINIO_API_PORT;
 
-  } catch (error) {
-    console.error('Erro no upload:', error);
+    const baseUrl = currentIsProd ? endpoint : `${endpoint}:${port}`;
+    const url = `${baseUrl}/anatoquizup-imagens/${fileName}`;
+
+    return res.status(201).json({ mensagem: 'Sucesso!', url });
+  } catch  {
     return res.status(500).json({ erro: 'Deu ruim no servidor.' });
   }
 });
 
-export default router;
+export default uploadRoute;

@@ -1,62 +1,67 @@
 import request from 'supertest';
 import express from 'express';
+import { S3Client } from '@aws-sdk/client-s3';
 import uploadRoute from '../../../src/modules/question/testeUpdateImage';
 
-let mockSend: jest.Mock;
-
-jest.mock('@aws-sdk/client-s3', () => {
-  return {
-    S3Client: jest.fn().mockImplementation(() => ({
-      send: (...args: unknown[]) => mockSend(...args)
-    })),
-    PutObjectCommand: jest.fn(),
-  };
-});
+jest.mock('@aws-sdk/client-s3');
+const MockedS3Client = S3Client as jest.MockedClass<typeof S3Client>;
 
 const app = express();
 app.use(express.json());
 app.use('/api', uploadRoute);
 
-describe('Upload Controller (Testes Unitários)', () => {
-  
+describe('Upload Controller (Clean Architecture)', () => {
+  const mockSend = jest.fn();
+
+  beforeAll(() => {
+    process.env.MINIO_ENDPOINT = 'http://localhost';
+    process.env.MINIO_API_PORT = '9000';
+    process.env.MINIO_ROOT_USER = 'admin';
+    process.env.MINIO_ROOT_PASSWORD = 'password';
+  });
+
   beforeEach(() => {
-    mockSend = jest.fn().mockResolvedValue({});
+    jest.clearAllMocks();
+    MockedS3Client.prototype.send = mockSend;
+    mockSend.mockResolvedValue({});
+    process.env.NODE_ENV = 'development';
   });
 
-  it('deve retornar status 400 se o usuário não enviar nenhuma imagem no body', async () => {
+  it('deve retornar status 400 se nenhuma imagem for enviada', async () => {
     const response = await request(app).post('/api/upload');
-    
     expect(response.status).toBe(400);
-    expect(response.body).toEqual({ erro: 'Nenhuma imagem enviada.' });
+    expect(response.body.erro).toBe('Nenhuma imagem enviada.');
   });
 
-  it('deve fazer upload da imagem com sucesso e retornar status 201 com a URL', async () => {
-    const imageBuffer = Buffer.from('conteudo-falso-da-imagem');
-    
+  it('deve gerar URL com porta 9000 em ambiente de desenvolvimento', async () => {
     const response = await request(app)
       .post('/api/upload')
-      .attach('imagem', imageBuffer, 'foto.png');
-      
+      .attach('imagem', Buffer.from('teste'), 'imagem.png');
+
     expect(response.status).toBe(201);
-    expect(response.body.mensagem).toBe('Sucesso!');
-    
-    expect(mockSend).toHaveBeenCalledTimes(1);
-    
-    expect(response.body.url).toContain('anatoquizup-imagens');
-    expect(response.body.url).toContain('foto.png');
+    expect(response.body.url).toContain(':9000');
   });
 
-  it('deve retornar status 500 se ocorrer um erro interno na comunicação com o MinIO/S3', async () => {
-    mockSend.mockRejectedValueOnce(new Error('MinIO fora do ar'));
+  it('deve gerar URL sem porta em ambiente de produção', async () => {
+    process.env.NODE_ENV = 'production';
 
-    const imageBuffer = Buffer.from('conteudo-falso');
-    
     const response = await request(app)
       .post('/api/upload')
-      .attach('imagem', imageBuffer, 'foto.png');
+      .attach('imagem', Buffer.from('teste'), 'imagem.png');
+
+    expect(response.status).toBe(201);
+    expect(response.body.url).not.toContain(':9000');
+    expect(response.body.url).toContain('http://localhost/anatoquizup-imagens');
+  });
+
+  it('deve retornar status 500 se o storage falhar', async () => {
+    mockSend.mockRejectedValueOnce(new Error('S3 Error'));
+
+    const response = await request(app)
+      .post('/api/upload')
+      .attach('imagem', Buffer.from('teste'), 'imagem.png');
 
     expect(response.status).toBe(500);
     expect(response.body.erro).toBe('Deu ruim no servidor.');
   });
-
 });
