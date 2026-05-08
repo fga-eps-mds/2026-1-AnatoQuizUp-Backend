@@ -16,13 +16,13 @@ const recuperarSenhaController = new RecuperarSenhaController(recuperarSenhaServ
 const recuperarSenhaRouter = Router();
 
 recuperarSenhaRouter.post(
-  "/forgot-password",
+  "/recuperar-senha",
   validarRequisicao(schemaSolicitarRecuperacaoSenha),
   recuperarSenhaController.forgotPassword,
 );
 
 recuperarSenhaRouter.post(
-  "/reset-password",
+  "/redefinir-senha",
   validarRequisicao(schemaRedefinirSenha),
   recuperarSenhaController.resetPassword,
 );

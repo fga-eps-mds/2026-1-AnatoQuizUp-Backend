@@ -6,3 +6,4 @@ process.env.JWT_PASSWORD_REDEFINITION_SECRET_KEY ||= "test-password-redefinition
 process.env.BREVO_API_KEY ||= "test-brevo-api-key";
 process.env.EMAIL_FROM ||= "noreply@example.com";
 process.env.FRONTEND_PROD_URL ||= "https://example.com";
+process.env.INTERNAL_TOKEN ||= "test-internal-token";

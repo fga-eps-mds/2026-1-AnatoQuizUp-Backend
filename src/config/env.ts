@@ -41,6 +41,7 @@ const envSchema = z.object({
     "JWT_PASSWORD_REDEFINITION_SECRET_KEY",
     "test-password-redefinition-secret",
   ),
+  INTERNAL_TOKEN: variavelComDefaultDeTeste("INTERNAL_TOKEN", "test-internal-token"),
   CORS_ORIGINS: z.string().default(DEFAULT_CORS_ORIGINS).transform(parseCorsOrigins),
 });
 
