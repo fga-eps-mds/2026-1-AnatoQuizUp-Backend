@@ -10,7 +10,6 @@ const authRouter = Router();
 authRouter.use("/", sessaoRouter);
 authRouter.use("/", alunoAuthRouter);
 authRouter.use("/", recuperarSenhaRouter);
-authRouter.use("/localidades", alunoLocalidadesRouter);
 authRouter.use("/alunos/localidades", alunoLocalidadesRouter);
 
 export { authRouter };

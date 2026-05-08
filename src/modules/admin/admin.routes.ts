@@ -17,14 +17,18 @@ const adminController = new AdminController(adminService);
 
 const adminRouter = Router();
 
-adminRouter.get("/users", validarRequisicao(schemaListarUsers, "query"), adminController.listar);
 adminRouter.get(
-  "/users/:id",
+  "/usuarios",
+  validarRequisicao(schemaListarUsers, "query"),
+  adminController.listar,
+);
+adminRouter.get(
+  "/usuarios/:id",
   validarRequisicao(schemaBuscarUserPorId, "params"),
   adminController.buscarPorId,
 );
 adminRouter.patch(
-  "/users/:id/status",
+  "/usuarios/:id/status",
   validarRequisicao(schemaBuscarUserPorId, "params"),
   validarRequisicao(schemaAlterarStatusUser),
   adminController.alterarStatus,

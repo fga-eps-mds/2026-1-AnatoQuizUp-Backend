@@ -1,7 +1,7 @@
 {
-  "name": "anatoquizup-api",
+  "name": "anatoquizup-backend",
   "version": "1.0.0",
-  "description": "Initial API scaffold for the AnatoQuizUp project.",
+  "description": "Backend API of the AnatoQuizUp project.",
   "private": true,
   "main": "dist/src/server.js",
   "scripts": {
@@ -19,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fga-eps-mds/2026-1-AnatoQuizUp-API.git"
+    "url": "git+https://github.com/fga-eps-mds/2026-1-AnatoQuizUp-Backend.git"
   },
   "engines": {
     "node": ">=24.0.0"
@@ -34,9 +34,9 @@
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/fga-eps-mds/2026-1-AnatoQuizUp-API/issues"
+    "url": "https://github.com/fga-eps-mds/2026-1-AnatoQuizUp-Backend/issues"
   },
-  "homepage": "https://github.com/fga-eps-mds/2026-1-AnatoQuizUp-API#readme",
+  "homepage": "https://github.com/fga-eps-mds/2026-1-AnatoQuizUp-Backend#readme",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1043.0",
     "@getbrevo/brevo": "^5.0.4",
