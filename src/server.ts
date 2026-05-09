@@ -1,5 +1,6 @@
 import { aplicacao } from "@/config/app";
 import { conectarBancoDeDados, desconectarBancoDeDados } from "@/config/db";
+import { configurarStorage } from "@/config/storage"; 
 import { env } from "@/config/env";
 import { logger } from "@/config/logger";
 
@@ -7,7 +8,9 @@ async function iniciarServidor() {
   // Conecta no banco
   await conectarBancoDeDados();
 
-  // Sobe o servidor
+  await configurarStorage();
+  logger.info("Infraestrutura de storage (MinIO) pronta.");
+
   const servidorHttp = aplicacao.listen(env.PORT, "0.0.0.0", () => {
     logger.info({ port: env.PORT }, "Servidor em execucao.");
   });
