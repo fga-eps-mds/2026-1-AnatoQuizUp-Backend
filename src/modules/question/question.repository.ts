@@ -58,6 +58,7 @@ export class QuestionRepository {
         data: {
           enunciado: data.enunciado,
           tipoQuestao: mapearTipoApiParaBanco(data.tipo),
+          dificuldade: data.dificuldade,
           respostaCorreta: data.alternativaCorreta,
           saibaMais: data.explicacaoPedagogica,
           urlImagem: data.imagem ?? null,
@@ -83,6 +84,7 @@ export class QuestionRepository {
         data: {
           ...(data.enunciado ? { enunciado: data.enunciado } : {}),
           ...(data.tipo ? { tipoQuestao: mapearTipoApiParaBanco(data.tipo) } : {}),
+          ...(data.dificuldade ? { dificuldade: data.dificuldade } : {}),
           ...(data.alternativaCorreta ? { respostaCorreta: data.alternativaCorreta } : {}),
           ...(data.explicacaoPedagogica ? { saibaMais: data.explicacaoPedagogica } : {}),
           ...(Object.prototype.hasOwnProperty.call(data, "imagem")

@@ -1,8 +1,14 @@
 import { z } from "zod";
 
-import { TIPO_QUESTAO_API } from "./dto/question.types";
+import { TIPO_QUESTAO_API, DIFICULDADE_API } from "./dto/question.types";
 
 const alternativa = z.string().trim().min(1).max(1000);
+
+const VALORES_DIFICULDADE = [
+  DIFICULDADE_API.FACIL,
+  DIFICULDADE_API.MEDIA,
+  DIFICULDADE_API.DIFICIL,
+] as const;
 
 const schemaAlternativasMultiplaEscolha = z.object({
   A: alternativa,
@@ -31,6 +37,7 @@ export const schemaCriarQuestao = z.discriminatedUnion("tipo", [
     tema: z.string().trim().min(1).max(120),
     enunciado: z.string().trim().min(1).max(5000),
     tipo: z.literal(TIPO_QUESTAO_API.MULTIPLA_ESCOLHA),
+    dificuldade: z.enum(VALORES_DIFICULDADE),
     imagem: z.string().trim().url().max(2048),
     alternativaCorreta: z.enum(["A", "B", "C", "D", "E"]),
     explicacaoPedagogica: z.string().trim().min(1).max(5000),
@@ -40,6 +47,7 @@ export const schemaCriarQuestao = z.discriminatedUnion("tipo", [
     tema: z.string().trim().min(1).max(120),
     enunciado: z.string().trim().min(1).max(5000),
     tipo: z.literal(TIPO_QUESTAO_API.VERDADEIRO_FALSO),
+    dificuldade: z.enum(VALORES_DIFICULDADE),
     imagem: z.string().trim().url().max(2048),
     alternativaCorreta: z.enum(["C", "E"]),
     explicacaoPedagogica: z.string().trim().min(1).max(5000),
@@ -54,6 +62,7 @@ export const schemaAtualizarQuestao = z
         tema: z.string().trim().min(1).max(120).optional(),
         enunciado: z.string().trim().min(1).max(5000).optional(),
         tipo: z.literal(TIPO_QUESTAO_API.MULTIPLA_ESCOLHA).optional(),
+        dificuldade: z.enum(VALORES_DIFICULDADE).optional(),
         imagem: z.string().trim().url().max(2048).nullable().optional(),
         alternativaCorreta: z.enum(["A", "B", "C", "D", "E"]).optional(),
         explicacaoPedagogica: z.string().trim().min(1).max(5000).optional(),
@@ -65,6 +74,7 @@ export const schemaAtualizarQuestao = z
         tema: z.string().trim().min(1).max(120).optional(),
         enunciado: z.string().trim().min(1).max(5000).optional(),
         tipo: z.literal(TIPO_QUESTAO_API.VERDADEIRO_FALSO),
+        dificuldade: z.enum(VALORES_DIFICULDADE).optional(),
         imagem: z.string().trim().url().max(2048).nullable().optional(),
         alternativaCorreta: z.enum(["C", "E"]).optional(),
         explicacaoPedagogica: z.string().trim().min(1).max(5000).optional(),
