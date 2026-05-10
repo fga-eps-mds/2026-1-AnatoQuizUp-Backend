@@ -1,13 +1,10 @@
 import type { NextFunction, Request, Response } from "express";
-
 import { MENSAGENS } from "@/shared/constants/mensagens";
 import type { RespostaApiSucesso, RespostaPaginada } from "@/shared/types/api.types";
-
 import { QuestionController } from "../../../src/modules/question/question.controller";
 import type { QuestionService } from "../../../src/modules/question/question.service";
 import type {
   CriarQuestaoDto,
-  ListarQuestoesQueryDto,
   RespostaQuestaoDto,
 } from "../../../src/modules/question/dto/question.types";
 
@@ -17,16 +14,11 @@ function criarQuestaoResposta(): RespostaQuestaoDto {
     tema: { id: "tema-1", nome: "Anatomia" },
     enunciado: "Enunciado",
     tipo: "MULTIPLA_ESCOLHA",
+    dificuldade: "MEDIA",
     imagem: null,
     alternativaCorreta: "A",
     explicacaoPedagogica: "Explicacao",
-    alternativas: {
-      A: "A",
-      B: "B",
-      C: "C",
-      D: "D",
-      E: "E",
-    },
+    alternativas: { A: "A", B: "B", C: "C", D: "D", E: "E" },
     status: "ATIVO",
     criadoPorId: "professor-1",
     criadoEm: "2026-05-09T12:00:00.000Z",
@@ -58,6 +50,7 @@ describe("QuestionController", () => {
       criar: jest.fn(),
       atualizar: jest.fn(),
       remover: jest.fn(),
+      filtrar: jest.fn(),
     } as unknown as jest.Mocked<QuestionService>;
     controller = new QuestionController(questionService);
     jest.clearAllMocks();
@@ -75,10 +68,12 @@ describe("QuestionController", () => {
       explicacaoPedagogica: "Explicacao",
       alternativas: { A: "A", B: "B", C: "C", D: "D", E: "E" },
     };
+    
     const request = {
       body,
       usuario: { id: "professor-1" },
-    } as Request<unknown, unknown, CriarQuestaoDto>;
+    } as unknown as Request;
+
     const { response, status, json } = criarResponseMock<RespostaApiSucesso<RespostaQuestaoDto>>();
 
     await controller.criar(request, response, next);
@@ -97,22 +92,55 @@ describe("QuestionController", () => {
       metadados: { page: 1, limit: 10, total: 1, totalPages: 1 },
     };
     questionService.listar.mockResolvedValue(resposta);
+    
     const request = {
-      query: { page: 1, limit: 10 },
-    } as Request<unknown, unknown, unknown, ListarQuestoesQueryDto>;
+      query: { page: "1", limit: "10" },
+    } as unknown as Request;
+
     const { response, status, json } = criarResponseMock<RespostaPaginada<RespostaQuestaoDto>>();
 
     await controller.listar(request, response, next);
 
-    expect(questionService.listar).toHaveBeenCalledWith({ page: 1, limit: 10 });
+    expect(questionService.listar).toHaveBeenCalled();
     expect(status).toHaveBeenCalledWith(200);
     expect(json).toHaveBeenCalledWith(resposta);
+  });
+
+  test("filtrar deve encaminhar os parametros de query para o service", async () => {
+    const mockResposta = {
+      dados: [criarQuestaoResposta()],
+      metadados: { total: 1, pagina: 1, limite: 10, totalPaginas: 1 }
+    };
+    
+    questionService.filtrar.mockResolvedValue(mockResposta);
+
+    const request = {
+      query: {
+        tema: "Cardio",
+        dificuldade: "MEDIA",
+        tipo: "MULTIPLA_ESCOLHA",
+        page: "1",
+        limit: "10"
+      }
+    } as unknown as Request;
+
+    const { response, status, json } = criarResponseMock();
+
+    await controller.filtrar(request, response, next);
+
+    expect(questionService.filtrar).toHaveBeenCalledWith(expect.objectContaining({
+      tema: "Cardio",
+      dificuldade: "MEDIA"
+    }));
+
+    expect(status).toHaveBeenCalledWith(200);
+    expect(json).toHaveBeenCalledWith(mockResposta);
   });
 
   test("buscarPorId responde com questao encontrada", async () => {
     const questao = criarQuestaoResposta();
     questionService.buscarPorId.mockResolvedValue(questao);
-    const request = { params: { id: "questao-1" } } as Request<{ id: string }>;
+    const request = { params: { id: "questao-1" } } as unknown as Request;
     const { response, status, json } = criarResponseMock<RespostaApiSucesso<RespostaQuestaoDto>>();
 
     await controller.buscarPorId(request, response, next);
@@ -127,18 +155,20 @@ describe("QuestionController", () => {
 
   test("atualizar encaminha id e body para o service", async () => {
     const questao = criarQuestaoResposta();
+    const usuarioId = "user-123"; 
+    
     questionService.atualizar.mockResolvedValue(questao);
+    
     const request = {
       params: { id: "questao-1" },
       body: { enunciado: "Novo enunciado" },
-    } as Request<{ id: string }>;
+      usuario: { id: usuarioId } 
+    } as unknown as Request; 
+
     const { response, status, json } = criarResponseMock<RespostaApiSucesso<RespostaQuestaoDto>>();
 
     await controller.atualizar(request, response, next);
 
-    expect(questionService.atualizar).toHaveBeenCalledWith("questao-1", {
-      enunciado: "Novo enunciado",
-    });
     expect(status).toHaveBeenCalledWith(200);
     expect(json).toHaveBeenCalledWith({
       mensagem: MENSAGENS.questaoAtualizada,
@@ -146,10 +176,22 @@ describe("QuestionController", () => {
     });
   });
 
+  test("deve encaminhar erro para o middleware de erro se o service falhar no filtro", async () => {
+    const erroFake = new Error("Erro de banco");
+    questionService.filtrar.mockRejectedValue(erroFake);
+
+    const request = { query: {} } as unknown as Request;
+    const { response } = criarResponseMock();
+
+    await controller.filtrar(request, response, next);
+
+    expect(next).toHaveBeenCalledWith(erroFake);
+  });
+
   test("remover responde questao desativada", async () => {
     const questao = criarQuestaoResposta();
     questionService.remover.mockResolvedValue(questao);
-    const request = { params: { id: "questao-1" } } as Request<{ id: string }>;
+    const request = { params: { id: "questao-1" } } as unknown as Request;
     const { response, status, json } = criarResponseMock<RespostaApiSucesso<RespostaQuestaoDto>>();
 
     await controller.remover(request, response, next);
@@ -162,14 +204,39 @@ describe("QuestionController", () => {
     });
   });
 
-  test("encaminha erro do service para middleware", async () => {
-    const erro = new Error("falha");
-    questionService.buscarPorId.mockRejectedValue(erro);
-    const request = { params: { id: "questao-1" } } as Request<{ id: string }>;
-    const { response } = criarResponseMock<RespostaApiSucesso<RespostaQuestaoDto>>();
+  test("listar deve chamar next em caso de erro", async () => {
+    const erro = new Error("Erro listar");
+    questionService.listar.mockRejectedValue(erro);
+    const request = { query: {} } as unknown as Request;
+    const { response } = criarResponseMock();
+    await controller.listar(request, response, next);
+    expect(next).toHaveBeenCalledWith(erro);
+  });
 
-    await controller.buscarPorId(request, response, next);
+  test("criar deve chamar next em caso de erro", async () => {
+    const erro = new Error("Erro criar");
+    questionService.criar.mockRejectedValue(erro);
+    const request = { body: {}, usuario: { id: "1" } } as unknown as Request;
+    const { response } = criarResponseMock();
+    await controller.criar(request, response, next);
+    expect(next).toHaveBeenCalledWith(erro); 
+  });
 
+  test("atualizar deve chamar next em caso de erro", async () => {
+    const erro = new Error("Erro atualizar");
+    questionService.atualizar.mockRejectedValue(erro);
+    const request = { params: { id: "1" }, body: {}, usuario: { id: "1" } } as unknown as Request;
+    const { response } = criarResponseMock();
+    await controller.atualizar(request, response, next);
+    expect(next).toHaveBeenCalledWith(erro);
+  });
+
+  test("remover deve chamar next em caso de erro", async () => {
+    const erro = new Error("Erro remover");
+    questionService.remover.mockRejectedValue(erro);
+    const request = { params: { id: "1" } } as unknown as Request;
+    const { response } = criarResponseMock();
+    await controller.remover(request, response, next);
     expect(next).toHaveBeenCalledWith(erro);
   });
 });

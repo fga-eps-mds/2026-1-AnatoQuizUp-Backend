@@ -12,6 +12,7 @@ import {
   schemaBuscarQuestaoPorId,
   schemaCriarQuestao,
   schemaListarQuestoes,
+  schemaFiltrarQuestoes,
 } from "./question.schemas";
 
 const questionRepository = new QuestionRepository();
@@ -24,6 +25,12 @@ questionRouter.use(middlewarePapeis(PAPEIS.PROFESSOR, PAPEIS.ADMINISTRADOR));
 
 questionRouter.post("/", validarRequisicao(schemaCriarQuestao), questionController.criar);
 questionRouter.get(
+  "/busca", 
+  validarRequisicao(schemaFiltrarQuestoes, "query"), 
+  questionController.filtrar
+);
+
+questionRouter.get(
   "/",
   validarRequisicao(schemaListarQuestoes, "query"),
   questionController.listar,
@@ -33,6 +40,7 @@ questionRouter.get(
   validarRequisicao(schemaBuscarQuestaoPorId, "params"),
   questionController.buscarPorId,
 );
+
 questionRouter.put(
   "/:id",
   validarRequisicao(schemaBuscarQuestaoPorId, "params"),

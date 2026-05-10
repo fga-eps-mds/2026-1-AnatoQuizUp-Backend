@@ -3,14 +3,13 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/config/db";
 import type { ParametrosPaginacao } from "@/shared/utils/paginacao.util";
 
-import type { CriarQuestaoDto, RegistroQuestaoCompleta } from "./dto/question.types";
+import type { CriarQuestaoDto, FiltroListarQuestoesQueryDto, RegistroQuestaoCompleta } from "./dto/question.types";
 import type {
   AlternativasMultiplaEscolhaDto,
   AlternativasVerdadeiroFalsoDto,
 } from "./dto/question.types";
 import { mapearTipoApiParaBanco } from "./dto/question.types";
 
-type DadosAtualizacaoQuestao = Partial<CriarQuestaoDto>;
 
 const includeQuestaoCompleta = {
   tema: true,
@@ -47,6 +46,38 @@ export class QuestionRepository {
     }) as Promise<RegistroQuestaoCompleta | null>;
   }
 
+  async filtrar(paginacao: ParametrosPaginacao, filtros: FiltroListarQuestoesQueryDto) {
+    const where: Prisma.QuestaoWhereInput = {
+      excluidoEm: null,
+      status: "ATIVO",
+    };
+
+   if (filtros.tema) {
+      where.tema = { nome: { contains: filtros.tema, mode: 'insensitive' } };
+    }
+    
+    if (filtros.dificuldade) {
+      where.dificuldade = filtros.dificuldade;
+    }
+    
+    if (filtros.tipo) {
+      where.tipoQuestao = mapearTipoApiParaBanco(filtros.tipo);
+    }
+
+    const [data, total] = await prisma.$transaction([
+      prisma.questao.findMany({
+        where,
+        include: includeQuestaoCompleta,
+        skip: paginacao.skip,
+        take: paginacao.limit,
+        orderBy: { criadoEm: "desc" },
+      }),
+      prisma.questao.count({ where }),
+    ]);
+
+    return { data: data as RegistroQuestaoCompleta[], total };
+  }
+
   async criar(data: CriarQuestaoDto, criadoPorId: string) {
     return prisma.$transaction(async (transacao) => {
       const temaExistente = await transacao.tema.findFirst({
@@ -75,37 +106,37 @@ export class QuestionRepository {
     });
   }
 
-  async atualizar(id: string, data: DadosAtualizacaoQuestao) {
+  async atualizar(id: string, data: CriarQuestaoDto, criadoPorId: string) {
     return prisma.$transaction(async (transacao) => {
-      const tema = data.tema ? await this.buscarOuCriarTema(transacao, data.tema) : null;
-
-      const questao = await transacao.questao.update({
+      await transacao.questao.update({
         where: { id },
         data: {
-          ...(data.enunciado ? { enunciado: data.enunciado } : {}),
-          ...(data.tipo ? { tipoQuestao: mapearTipoApiParaBanco(data.tipo) } : {}),
-          ...(data.dificuldade ? { dificuldade: data.dificuldade } : {}),
-          ...(data.alternativaCorreta ? { respostaCorreta: data.alternativaCorreta } : {}),
-          ...(data.explicacaoPedagogica ? { saibaMais: data.explicacaoPedagogica } : {}),
-          ...(Object.prototype.hasOwnProperty.call(data, "imagem")
-            ? { urlImagem: data.imagem ?? null }
-            : {}),
-          ...(tema ? { temaId: tema.id } : {}),
-          ...(data.alternativas
-            ? {
-                alternativas: {
-                  upsert: {
-                    create: this.mapearAlternativas(data as CriarQuestaoDto),
-                    update: this.mapearAlternativas(data as CriarQuestaoDto),
-                  },
-                },
-              }
-            : {}),
+          status: "INATIVO",
+          excluidoEm: new Date(),
+        },
+      });
+
+      const temaExistente = await transacao.tema.findFirst({
+        where: { nome: data.tema, excluidoEm: null },
+      });
+      const tema = temaExistente ?? (await transacao.tema.create({ data: { nome: data.tema } }));
+
+      return await transacao.questao.create({
+        data: {
+          enunciado: data.enunciado,
+          tipoQuestao: mapearTipoApiParaBanco(data.tipo),
+          dificuldade: data.dificuldade,
+          respostaCorreta: data.alternativaCorreta,
+          saibaMais: data.explicacaoPedagogica,
+          urlImagem: data.imagem ?? null,
+          criadoPorId,
+          temaId: tema.id,
+          alternativas: {
+            create: this.mapearAlternativas(data),
+          },
         },
         include: includeQuestaoCompleta,
       });
-
-      return questao as RegistroQuestaoCompleta;
     });
   }
 

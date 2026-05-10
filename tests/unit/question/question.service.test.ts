@@ -70,6 +70,7 @@ function criarRepositoryMock() {
     criar: jest.fn<QuestionRepository["criar"]>(),
     atualizar: jest.fn<QuestionRepository["atualizar"]>(),
     desativar: jest.fn<QuestionRepository["desativar"]>(),
+    filtrar: jest.fn<QuestionRepository["filtrar"]>(),
   } as unknown as jest.Mocked<QuestionRepository>;
 }
 
@@ -168,6 +169,41 @@ describe("QuestionService", () => {
     expect(resposta.dados[0]?.tema.nome).toBe("Sistema cardiovascular");
   });
 
+  test("filtrar deve chamar o repository com filtros e paginacao processada", async () => {
+    const mockRepoReturn = { data: [criarQuestao()], total: 1 };
+    repository.filtrar.mockResolvedValue(mockRepoReturn);
+
+    const filtros = {
+      tema: "Anatomia",
+      dificuldade: "FACIL" as const,
+      page: 2,
+      limit: 5
+    };
+
+    const resultado = await service.filtrar(filtros);
+
+    expect(repository.filtrar).toHaveBeenCalledWith(
+      expect.objectContaining({
+        skip: 5,
+        limit: 5
+      }),
+      expect.objectContaining({
+        tema: "Anatomia",
+        dificuldade: "FACIL"
+      })
+    );
+
+    expect(resultado.metadados.total).toBe(1);
+    expect(resultado.dados).toHaveLength(1);
+  });
+
+  test("deve disparar erro ao tentar buscar questão inexistente por ID", async () => {
+  repository.buscarPorId.mockResolvedValue(null);
+
+  await expect(service.buscarPorId("id-invalido"))
+    .rejects.toThrow(); 
+  });
+
   test("retorna 404 ao buscar questao inexistente", async () => {
     repository.buscarPorId.mockResolvedValue(null);
 
@@ -179,17 +215,40 @@ describe("QuestionService", () => {
   });
 
   test("atualiza questao existente preservando dados usados na validacao", async () => {
-    repository.buscarPorId.mockResolvedValue(criarQuestao());
+    const questaoExistente = criarQuestao(); 
+    const usuarioId = "user-123";
+    
+    repository.buscarPorId.mockResolvedValue(questaoExistente);
     repository.atualizar.mockResolvedValue(criarQuestao({ enunciado: "Enunciado atualizado" }));
 
     const resposta = await service.atualizar("questao-1", {
       enunciado: "Enunciado atualizado",
-    });
+    }, usuarioId);
 
-    expect(repository.atualizar).toHaveBeenCalledWith("questao-1", {
-      enunciado: "Enunciado atualizado",
-    });
+    expect(repository.atualizar).toHaveBeenCalledWith(
+      "questao-1", 
+      expect.objectContaining({
+        enunciado: "Enunciado atualizado",
+        tema: questaoExistente.tema.nome, 
+        tipo: expect.any(String)
+      }),
+      usuarioId
+    );
+    
     expect(resposta.enunciado).toBe("Enunciado atualizado");
+  });
+
+  test("deve lançar erro se tentar atualizar uma questão inexistente", async () => {
+    repository.buscarPorId.mockResolvedValue(null);
+
+    await expect(
+      service.atualizar("id-fantasma", { enunciado: "..." }, "user-1")
+    ).rejects.toThrow(); 
+  });
+
+  test("deve lançar erro se tentar remover questão inexistente", async () => {
+    repository.buscarPorId.mockResolvedValue(null);
+    await expect(service.remover("id-fake")).rejects.toThrow();
   });
 
   test("remove questao com soft delete", async () => {

@@ -6,12 +6,13 @@ import {
   montarMetadadosPaginacao,
   resolverParametrosPaginacao,
 } from "@/shared/utils/paginacao.util";
-
 import type {
   AtualizarQuestaoDto,
   CriarQuestaoDto,
   ListarQuestoesQueryDto,
+  FiltroListarQuestoesQueryDto,
   RespostaQuestaoDto,
+  AlternativasQuestaoDto,
 } from "./dto/question.types";
 import {
   TIPO_QUESTAO_API,
@@ -19,6 +20,7 @@ import {
   mapearTipoBancoParaApi,
 } from "./dto/question.types";
 import type { QuestionRepository } from "./question.repository";
+import type {AlternativaQuestao, Dificuldade } from "@prisma/client";
 
 export class QuestionService {
   constructor(private readonly questionRepository: QuestionRepository) {}
@@ -43,6 +45,16 @@ export class QuestionService {
     return converterParaRespostaQuestao(questao);
   }
 
+  async filtrar(query: FiltroListarQuestoesQueryDto): Promise<RespostaPaginada<RespostaQuestaoDto>> {
+    const paginacao = resolverParametrosPaginacao(query);
+    const { data, total } = await this.questionRepository.filtrar(paginacao, query);
+
+    return {
+      dados: data.map(converterParaRespostaQuestao),
+      metadados: montarMetadadosPaginacao(paginacao, total),
+    };
+  }
+
   async criar(data: CriarQuestaoDto, criadoPorId: string): Promise<RespostaQuestaoDto> {
     if (!criadoPorId) {
       throw new ErroAplicacao({
@@ -59,28 +71,24 @@ export class QuestionService {
     return converterParaRespostaQuestao(questao);
   }
 
-  async atualizar(id: string, data: AtualizarQuestaoDto): Promise<RespostaQuestaoDto> {
-    const questao = await this.questionRepository.buscarPorId(id);
+  async atualizar(id: string, data: AtualizarQuestaoDto, usuarioId: string): Promise<RespostaQuestaoDto> {
+    const questaoAntiga = await this.questionRepository.buscarPorId(id);
+    if (!questaoAntiga) throw this.erroQuestaoNaoEncontrada(id);
 
-    if (!questao) {
-      throw this.erroQuestaoNaoEncontrada(id);
-    }
-
-    const dataNormalizada = {
-      ...data,
-      tipo: data.tipo ?? mapearTipoBancoParaApi(questao.tipoQuestao),
-      alternativaCorreta: data.alternativaCorreta ?? questao.respostaCorreta,
-      alternativas: data.alternativas ?? this.extrairAlternativasAtuais(questao),
+    const dadosNovaQuestao: CriarQuestaoDto = {
+      tema: data.tema ?? questaoAntiga.tema.nome,
+      enunciado: data.enunciado ?? questaoAntiga.enunciado,
+      tipo: data.tipo ?? mapearTipoBancoParaApi(questaoAntiga.tipoQuestao),
+      dificuldade: (data.dificuldade ?? questaoAntiga.dificuldade) as Dificuldade,
+      imagem: data.imagem ?? questaoAntiga.urlImagem ?? "",
+      alternativaCorreta: (data.alternativaCorreta ?? questaoAntiga.respostaCorreta) as AlternativaQuestao,
+      explicacaoPedagogica: data.explicacaoPedagogica ?? questaoAntiga.saibaMais ?? "",
+      alternativas: (data.alternativas ?? this.extrairAlternativasAtuais(questaoAntiga)) as AlternativasQuestaoDto,
     };
 
-    this.validarQuestao(dataNormalizada as CriarQuestaoDto);
+    const novaQuestao = await this.questionRepository.atualizar(id, dadosNovaQuestao, usuarioId);
 
-    const questaoAtualizada = await this.questionRepository.atualizar(id, {
-      ...data,
-      ...(data.alternativas && !data.tipo ? { tipo: dataNormalizada.tipo } : {}),
-    });
-
-    return converterParaRespostaQuestao(questaoAtualizada);
+    return converterParaRespostaQuestao(novaQuestao);
   }
 
   async remover(id: string): Promise<RespostaQuestaoDto> {

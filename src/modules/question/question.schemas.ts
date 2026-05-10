@@ -32,6 +32,14 @@ export const schemaBuscarQuestaoPorId = z.object({
   id: z.string().trim().min(1),
 });
 
+export const schemaFiltrarQuestoes = z.object({
+  page: z.coerce.number().int().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  tema: z.string().trim().optional(),
+  dificuldade: z.enum(VALORES_DIFICULDADE).optional(),
+  tipo: z.enum([TIPO_QUESTAO_API.MULTIPLA_ESCOLHA, TIPO_QUESTAO_API.VERDADEIRO_FALSO]).optional(),
+});
+
 export const schemaCriarQuestao = z.discriminatedUnion("tipo", [
   z.object({
     tema: z.string().trim().min(1).max(120),
