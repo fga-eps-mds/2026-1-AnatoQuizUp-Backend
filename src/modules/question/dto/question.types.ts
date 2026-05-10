@@ -58,6 +58,14 @@ export type ListarQuestoesQueryDto = {
   limit?: number;
 };
 
+export type FiltroListarQuestoesQueryDto = {
+  page?: number;
+  limit?: number;
+  tema?: string;
+  dificuldade?: DificuldadeApi;
+  tipo?: TipoQuestaoApi;
+};
+
 export type RegistroQuestaoCompleta = Questao & {
   tema: Tema;
   alternativas: QuestaoAlternativa | null;

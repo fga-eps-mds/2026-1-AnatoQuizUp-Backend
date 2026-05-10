@@ -60,6 +60,53 @@ describe("QuestionRepository", () => {
     expect(resposta).toEqual({ id: "questao-1" });
   });
 
+  test("deve filtrar questoes por tema, dificuldade e tipo com paginacao", async () => {
+    const registros = [{ id: "questao-filtrada-1" }];
+    const totalRegistros = 1;
+
+    transactionMock.mockResolvedValue([registros, totalRegistros]);
+
+    const filtros = {
+      tema: "Sistema Cardiovascular",
+      dificuldade: "MEDIA",
+      tipo: "MULTIPLA_ESCOLHA"
+    };
+
+    const paginacao = { skip: 0, limit: 5 };
+
+    const resposta = await repository.filtrar(paginacao, filtros);
+
+    expect(prisma.questao.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          status: "ATIVO",
+          excluidoEm: null,
+          dificuldade: "MEDIA",
+          tipoQuestao: "MULTIPLA_ESCOLHA",
+          tema: {
+            nome: {
+              contains: "Sistema Cardiovascular",
+              mode: "insensitive",
+            },
+          },
+        }),
+        skip: 0,
+        take: 5,
+      })
+    );
+
+    expect(prisma.questao.count).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          status: "ATIVO",
+          dificuldade: "MEDIA",
+        }),
+      })
+    );
+
+    expect(resposta).toEqual({ data: registros, total: totalRegistros });
+  });
+
   test("cria questao e tema quando tema ainda nao existe", async () => {
     const tema = { id: "tema-1", nome: "Anatomia" };
     const questao = { id: "questao-1" };
@@ -79,6 +126,7 @@ describe("QuestionRepository", () => {
         tema: "Anatomia",
         enunciado: "Enunciado",
         tipo: "MULTIPLA_ESCOLHA",
+        dificuldade:"DIFICIL",
         imagem: "https://cdn.example.com/imagem.png",
         alternativaCorreta: "A",
         explicacaoPedagogica: "Explicacao",
@@ -119,5 +167,49 @@ describe("QuestionRepository", () => {
       include: { tema: true, alternativas: true },
     });
     expect(resposta).toEqual({ id: "questao-1", status: "INATIVO" });
+  });
+
+  test("atualizar deve criar um NOVO tema se o tema passado não existir", async () => {
+    const transacaoMock = {
+      questao: { 
+        update: jest.fn(), 
+        create: jest.fn().mockResolvedValue({ id: "nova-questao-id" }) 
+      },
+      tema: { 
+        findFirst: jest.fn().mockResolvedValue(null), 
+        create: jest.fn().mockResolvedValue({ id: "tema-novo-id" }) 
+      },
+    };
+    
+    transactionMock.mockImplementation((cb) => cb(transacaoMock));
+
+    const dadosParaAtualizar = { 
+      tema: "Tema Inexistente", 
+      enunciado: "Novo enunciado",
+      alternativas: {
+        A: "Opção A",
+        B: "Opção B",
+        C: "Opção C",
+        D: "Opção D",
+        E: "Opção E"
+      },
+      tipo: "MULTIPLA_ESCOLHA" as const,
+      dificuldade: "FACIL" as const,
+      alternativaCorreta: "A" as const
+    };
+
+    await repository.atualizar("id-velho", dadosParaAtualizar, "autor-1");
+
+    expect(transacaoMock.tema.create).toHaveBeenCalledWith({
+      data: { nome: "Tema Inexistente" }
+    });
+
+    expect(transacaoMock.questao.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          temaId: "tema-novo-id"
+        })
+      })
+    );
   });
 });

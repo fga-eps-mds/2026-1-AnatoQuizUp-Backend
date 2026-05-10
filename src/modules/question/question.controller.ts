@@ -4,7 +4,6 @@ import { MENSAGENS } from "@/shared/constants/mensagens";
 import type { RespostaApiSucesso, RespostaPaginada } from "@/shared/types/api.types";
 
 import type {
-  AtualizarQuestaoDto,
   CriarQuestaoDto,
   ListarQuestoesQueryDto,
   RespostaQuestaoDto,
@@ -45,6 +44,15 @@ export class QuestionController {
     }
   };
 
+  filtrar = async (request: Request, response: Response, next: NextFunction) => {
+    try {
+      const questoes = await this.questionService.filtrar(request.query);
+      return response.status(200).json(questoes);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
   criar = async (
     request: Request<unknown, unknown, CriarQuestaoDto>,
     response: Response<RespostaApiSucesso<RespostaQuestaoDto>>,
@@ -62,13 +70,16 @@ export class QuestionController {
     }
   };
 
-  atualizar = async (
-    request: Request<{ id: string }, unknown, AtualizarQuestaoDto>,
-    response: Response<RespostaApiSucesso<RespostaQuestaoDto>>,
-    next: NextFunction,
-  ) => {
+  atualizar = async (request: Request, response: Response, next: NextFunction) => {
     try {
-      const questao = await this.questionService.atualizar(request.params.id, request.body);
+      
+      const id = request.params.id as string; 
+      
+      const questao = await this.questionService.atualizar(
+        id, 
+        request.body, 
+        request.usuario?.id ?? ""
+      );
 
       return response.status(200).json({
         mensagem: MENSAGENS.questaoAtualizada,
