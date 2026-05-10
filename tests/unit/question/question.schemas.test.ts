@@ -1,4 +1,4 @@
-import { schemaAtualizarQuestao, schemaCriarQuestao } from "./question.schemas";
+import { schemaAtualizarQuestao, schemaCriarQuestao } from "../../../src/modules/question/question.schemas";
 
 describe("schemas question", () => {
   test("valida criacao de questao de multipla escolha com 5 alternativas", () => {

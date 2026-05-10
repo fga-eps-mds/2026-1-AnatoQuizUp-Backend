@@ -3,13 +3,13 @@ import type { NextFunction, Request, Response } from "express";
 import { MENSAGENS } from "@/shared/constants/mensagens";
 import type { RespostaApiSucesso, RespostaPaginada } from "@/shared/types/api.types";
 
-import { QuestionController } from "./question.controller";
-import type { QuestionService } from "./question.service";
+import { QuestionController } from "../../../src/modules/question/question.controller";
+import type { QuestionService } from "../../../src/modules/question/question.service";
 import type {
   CriarQuestaoDto,
   ListarQuestoesQueryDto,
   RespostaQuestaoDto,
-} from "./dto/question.types";
+} from "../../../src/modules/question/dto/question.types";
 
 function criarQuestaoResposta(): RespostaQuestaoDto {
   return {

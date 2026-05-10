@@ -1,5 +1,5 @@
 import { prisma } from "@/config/db";
-import { QuestionRepository } from "./question.repository";
+import { QuestionRepository } from "../../../src/modules/question/question.repository";
 
 jest.mock("@/config/db", () => ({
   prisma: {
