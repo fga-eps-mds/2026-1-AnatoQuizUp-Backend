@@ -1,5 +1,7 @@
 import { Router } from "express";
 
+import { PAPEIS } from "@/shared/constants/papeis";
+import { middlewarePapeis } from "@/shared/middlewares/papeis.middleware";
 import { validarRequisicao } from "@/shared/middlewares/validacao.middleware";
 
 import { QuestionController } from "./question.controller";
@@ -17,6 +19,8 @@ const questionService = new QuestionService(questionRepository);
 const questionController = new QuestionController(questionService);
 
 const questionRouter = Router();
+
+questionRouter.use(middlewarePapeis(PAPEIS.PROFESSOR, PAPEIS.ADMINISTRADOR));
 
 questionRouter.post("/", validarRequisicao(schemaCriarQuestao), questionController.criar);
 questionRouter.get(
