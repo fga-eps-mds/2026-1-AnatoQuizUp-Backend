@@ -61,6 +61,12 @@ enum StatusQuestao {
   INATIVO
 }
 
+enum Dificuldade {
+  FACIL
+  MEDIA
+  DIFICIL
+}
+
 model Usuario {
   id       String  @id @default(cuid())
   nome     String
@@ -168,6 +174,8 @@ model Questao {
 
   alternativas QuestaoAlternativa?
   resolucoes   ResolucaoQuestao[]
+
+  dificuldade Dificuldade @default(MEDIA)
 
   criadoEm     DateTime  @default(now())
   atualizadoEm DateTime  @updatedAt
