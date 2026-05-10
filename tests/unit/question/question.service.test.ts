@@ -1,6 +1,6 @@
-import type { QuestionRepository } from "./question.repository";
-import { QuestionService } from "./question.service";
-import type { CriarQuestaoDto, RegistroQuestaoCompleta } from "./dto/question.types";
+import type { QuestionRepository } from "../../../src/modules/question/question.repository";
+import { QuestionService } from "../../../src/modules/question/question.service";
+import type { CriarQuestaoDto, RegistroQuestaoCompleta } from "../../../src/modules/question/dto/question.types";
 import { MENSAGENS } from "@/shared/constants/mensagens";
 import { CodigoDeErro } from "@/shared/errors/codigos-de-erro";
 
