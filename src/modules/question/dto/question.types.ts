@@ -5,6 +5,7 @@ import type {
   StatusQuestao,
   Tema,
   TipoQuestao,
+  Dificuldade,
 } from "@prisma/client";
 
 export const TIPO_QUESTAO_API = {
@@ -13,6 +14,14 @@ export const TIPO_QUESTAO_API = {
 } as const;
 
 export type TipoQuestaoApi = (typeof TIPO_QUESTAO_API)[keyof typeof TIPO_QUESTAO_API];
+
+export const DIFICULDADE_API = {
+  FACIL: "FACIL",
+  MEDIA: "MEDIA",
+  DIFICIL: "DIFICIL",
+} as const;
+
+export type DificuldadeApi = (typeof DIFICULDADE_API)[keyof typeof DIFICULDADE_API];
 
 export type AlternativasMultiplaEscolhaDto = {
   A: string;
@@ -35,6 +44,7 @@ export type CriarQuestaoDto = {
   tema: string;
   enunciado: string;
   tipo: TipoQuestaoApi;
+  dificuldade: Dificuldade;
   imagem: string;
   alternativaCorreta: AlternativaQuestao;
   explicacaoPedagogica: string;
@@ -61,6 +71,7 @@ export type RespostaQuestaoDto = {
   };
   enunciado: string;
   tipo: TipoQuestaoApi;
+  dificuldade: DificuldadeApi;
   imagem: string | null;
   alternativaCorreta: AlternativaQuestao;
   explicacaoPedagogica: string | null;
@@ -106,6 +117,7 @@ export function converterParaRespostaQuestao(questao: RegistroQuestaoCompleta): 
     },
     enunciado: questao.enunciado,
     tipo,
+    dificuldade: questao.dificuldade as DificuldadeApi,
     imagem: questao.urlImagem,
     alternativaCorreta: questao.respostaCorreta,
     explicacaoPedagogica: questao.saibaMais,
