@@ -14,6 +14,7 @@ import { middlewareAutenticacao } from "@/shared/middlewares/autenticacao.middle
 import { middlewareTokenInterno } from "@/shared/middlewares/token-interno.middleware";
 import { middlewareTratamentoErros } from "@/shared/middlewares/tratamento-erros.middleware";
 import { adminRouter } from "@/modules/admin/admin.routes";
+import { questionRouter } from "@/modules/question";
 
 const aplicacao = express();
 const roteadorApi = Router();
@@ -39,6 +40,7 @@ roteadorApi.use("/autenticacao", authRouter);
 roteadorApi.use(middlewareAutenticacao);
 roteadorApi.use("/exemplos", exemploRouter);
 roteadorApi.use("/admin", adminRouter);
+roteadorApi.use("/questoes", questionRouter);
 aplicacao.use("/api/v1", roteadorApi);
 
 aplicacao.use((_request, _response, next) => {
