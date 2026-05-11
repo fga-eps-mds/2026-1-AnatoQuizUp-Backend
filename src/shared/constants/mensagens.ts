@@ -22,7 +22,9 @@ export const MENSAGENS = {
   contextoAdminObrigatorio:
     "Os cabecalhos x-usuario-id e x-usuario-perfil sao obrigatorios para esta operacao.",
   usuarioCadastrado: "Usuario cadastrado com sucesso.",
-  emailJaCadastrado: "Ja existe um usuario cadastrado com este email.",
+  emailJaCadastrado: "Email ja cadastrado.",
+  siapeJaCadastrado: "SIAPE ja cadastrado.",
+  professorCadastradoPendente: "Cadastro realizado. Aguarde aprovacao do administrador.",
   nicknameJaCadastrado: "Ja existe um usuario cadastrado com este nickname.",
   nacionalidadesListadas: "Nacionalidades listadas com sucesso.",
   opcoesAcademicasListadas: "Opcoes academicas listadas com sucesso.",

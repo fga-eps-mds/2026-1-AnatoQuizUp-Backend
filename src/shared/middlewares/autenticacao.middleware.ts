@@ -11,6 +11,7 @@ import { verificarTokenJwt } from "@/shared/utils/jwt";
 
 const ROTAS_PUBLICAS = new Set([
   "/autenticacao/cadastro",
+  "/autenticacao/cadastro/professor",
   "/autenticacao/login",
   "/autenticacao/recuperar-senha",
   "/autenticacao/redefinir-senha",
