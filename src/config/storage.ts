@@ -17,22 +17,41 @@ if (!rawEndpoint || !accessKey || !secretKey || !apiPort) {
 
 const isProduction = process.env.NODE_ENV === "production";
 
-const cleanHostname = rawEndpoint.replace(/^https?:\/\//, '');
+function montarEndpointStorage(endpoint: string, portaApi: string) {
+  const porta = Number(portaApi);
 
-const s3Endpoint = isProduction 
-  ? rawEndpoint 
-  : `${rawEndpoint}:${apiPort}`;
+  if (!Number.isInteger(porta) || porta <= 0) {
+    throw new Error("Erro: MINIO_API_PORT invalida.");
+  }
+
+  const endpointComProtocolo = /^https?:\/\//i.test(endpoint) ? endpoint : `http://${endpoint}`;
+  const url = new URL(endpointComProtocolo);
+
+  url.port = String(porta);
+  url.pathname = "";
+  url.search = "";
+  url.hash = "";
+
+  return {
+    hostname: url.hostname,
+    port: porta,
+    useSSL: url.protocol === "https:",
+    s3Endpoint: url.toString().replace(/\/$/, ""),
+  };
+}
+
+export const minioEndpointConfig = montarEndpointStorage(rawEndpoint, apiPort);
 
 export const minioAdmin = global.__minio_native__ ?? new Minio.Client({
-  endPoint: cleanHostname,
-  port: isProduction ? undefined : Number(apiPort), 
-  useSSL: isProduction || rawEndpoint.startsWith('https'),
+  endPoint: minioEndpointConfig.hostname,
+  port: minioEndpointConfig.port,
+  useSSL: minioEndpointConfig.useSSL,
   accessKey,
   secretKey,
 });
 
 export const s3Client = global.__s3_client__ ?? new S3Client({
-  endpoint: s3Endpoint,
+  endpoint: minioEndpointConfig.s3Endpoint,
   region: "us-east-1",
   credentials: {
     accessKeyId: accessKey,
