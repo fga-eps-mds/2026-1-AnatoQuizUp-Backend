@@ -7,8 +7,8 @@ const dadosValidos = {
   instituicao: "UnB",
   departamento: "Anatomia",
   curso: "Medicina",
-  senha: "password123",
-  confirmacaoSenha: "password123",
+  senha: "senhaValida123",
+  confirmacaoSenha: "senhaValida123",
 };
 
 describe("schemaRegistrarProfessor", () => {
@@ -93,7 +93,7 @@ describe("schemaRegistrarProfessor", () => {
   test("rejeita senhas diferentes", () => {
     const resultado = schemaRegistrarProfessor.safeParse({
       ...dadosValidos,
-      confirmacaoSenha: "password456",
+      confirmacaoSenha: "senhaDiferente123",
     });
 
     expect(resultado.success).toBe(false);
