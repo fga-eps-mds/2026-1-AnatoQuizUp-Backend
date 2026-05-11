@@ -17,6 +17,7 @@ const ROTAS_PUBLICAS = new Set([
   "/autenticacao/redefinir-senha",
   "/autenticacao/atualizar-token",
   "/cadastro",
+  "/cadastro/professor",
   "/login",
   "/redefinir-senha",
   "/recuperar-senha",

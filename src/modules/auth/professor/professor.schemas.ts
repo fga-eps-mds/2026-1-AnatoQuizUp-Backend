@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const FORMATO_EMAIL_UNB = /.+@(.+\.)?unb\.br$/i;
+const FORMATO_EMAIL_UNB = /^[^\s@]+@(?:[a-z0-9-]+\.)*unb\.br$/i;
 const FORMATO_SIAPE = /^\d{7}$/;
 
 function textoObrigatorio(max: number) {
