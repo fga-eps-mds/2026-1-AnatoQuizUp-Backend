@@ -62,8 +62,8 @@ describe("ProfessorAuthController", () => {
       instituicao: "UnB",
       departamento: "Anatomia",
       curso: "Medicina",
-      senha: "password123",
-      confirmacaoSenha: "password123",
+      senha: "senhaValida123",
+      confirmacaoSenha: "senhaValida123",
     } satisfies RegistrarProfessorDto;
     const request = { body } as Request<unknown, unknown, RegistrarProfessorDto>;
     const { response, status, json } = criarResponseMock<

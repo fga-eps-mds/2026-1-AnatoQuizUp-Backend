@@ -14,8 +14,8 @@ const inputValido = {
   instituicao: "UnB",
   departamento: " Anatomia ",
   curso: " Medicina ",
-  senha: "password123",
-  confirmacaoSenha: "password123",
+  senha: "senhaValida123",
+  confirmacaoSenha: "senhaValida123",
 };
 
 function criarRegistroProfessor(overrides: Partial<RegistroProfessor> = {}): RegistroProfessor {
@@ -42,6 +42,24 @@ function criarErroCampoUnico(campo: string) {
     meta: {
       target: [campo],
     },
+  });
+}
+
+function criarErroCampoUnicoComTargetTexto(campo: string) {
+  return new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
+    code: "P2002",
+    clientVersion: "6.17.1",
+    meta: {
+      target: `usuarios_${campo}_key`,
+    },
+  });
+}
+
+function criarErroPrisma(code: string, meta?: Record<string, unknown>) {
+  return new Prisma.PrismaClientKnownRequestError("Prisma request failed", {
+    code,
+    clientVersion: "6.17.1",
+    meta,
   });
 }
 
@@ -132,6 +150,19 @@ describe("ProfessorAuthService", () => {
     } satisfies Partial<ErroAplicacao>);
   });
 
+  test("converte violacao unica de email com target textual para conflito", async () => {
+    professorAuthRepository.buscarPorEmail.mockResolvedValue(null);
+    professorAuthRepository.buscarPorSiape.mockResolvedValue(null);
+    professorAuthRepository.criar.mockRejectedValue(
+      criarErroCampoUnicoComTargetTexto("email"),
+    );
+
+    await expect(service.registrar(inputValido)).rejects.toMatchObject({
+      codigoStatus: 409,
+      message: MENSAGENS.emailJaCadastrado,
+    } satisfies Partial<ErroAplicacao>);
+  });
+
   test("converte violacao unica de SIAPE durante criacao para conflito", async () => {
     professorAuthRepository.buscarPorEmail.mockResolvedValue(null);
     professorAuthRepository.buscarPorSiape.mockResolvedValue(null);
@@ -141,5 +172,55 @@ describe("ProfessorAuthService", () => {
       codigoStatus: 409,
       message: MENSAGENS.siapeJaCadastrado,
     } satisfies Partial<ErroAplicacao>);
+  });
+
+  test("converte violacao unica SQL de email durante criacao para conflito", async () => {
+    professorAuthRepository.buscarPorEmail.mockResolvedValue(null);
+    professorAuthRepository.buscarPorSiape.mockResolvedValue(null);
+    professorAuthRepository.criar.mockRejectedValue(
+      criarErroPrisma("P2010", {
+        code: "23505",
+        message: "duplicate key value violates unique constraint usuarios_email_key",
+      }),
+    );
+
+    await expect(service.registrar(inputValido)).rejects.toMatchObject({
+      codigoStatus: 409,
+      message: MENSAGENS.emailJaCadastrado,
+    } satisfies Partial<ErroAplicacao>);
+  });
+
+  test("converte violacao unica SQL de SIAPE durante criacao para conflito", async () => {
+    professorAuthRepository.buscarPorEmail.mockResolvedValue(null);
+    professorAuthRepository.buscarPorSiape.mockResolvedValue(null);
+    professorAuthRepository.criar.mockRejectedValue(
+      criarErroPrisma("P2010", {
+        code: "23505",
+        message: "duplicate key value violates unique constraint usuarios_siape_key",
+      }),
+    );
+
+    await expect(service.registrar(inputValido)).rejects.toMatchObject({
+      codigoStatus: 409,
+      message: MENSAGENS.siapeJaCadastrado,
+    } satisfies Partial<ErroAplicacao>);
+  });
+
+  test("repassa erro Prisma sem conflito conhecido", async () => {
+    const erro = criarErroPrisma("P2025");
+    professorAuthRepository.buscarPorEmail.mockResolvedValue(null);
+    professorAuthRepository.buscarPorSiape.mockResolvedValue(null);
+    professorAuthRepository.criar.mockRejectedValue(erro);
+
+    await expect(service.registrar(inputValido)).rejects.toBe(erro);
+  });
+
+  test("repassa erro inesperado da criacao", async () => {
+    const erro = new Error("falha inesperada");
+    professorAuthRepository.buscarPorEmail.mockResolvedValue(null);
+    professorAuthRepository.buscarPorSiape.mockResolvedValue(null);
+    professorAuthRepository.criar.mockRejectedValue(erro);
+
+    await expect(service.registrar(inputValido)).rejects.toBe(erro);
   });
 });
