@@ -4,7 +4,6 @@ import { MENSAGENS } from "@/shared/constants/mensagens";
 import type { RespostaApiSucesso, RespostaPaginada } from "@/shared/types/api.types";
 
 import type {
-  CriarQuestaoDto,
   ListarQuestoesQueryDto,
   RespostaQuestaoDto,
 } from "./dto/question.types";
@@ -54,15 +53,23 @@ export class QuestionController {
   };
 
   criar = async (
-    request: Request<unknown, unknown, CriarQuestaoDto>,
-    response: Response<RespostaApiSucesso<RespostaQuestaoDto>>,
+    request: Request, 
+    response: Response,
     next: NextFunction,
   ) => {
     try {
-      const questao = await this.questionService.criar(request.body, request.usuario?.id ?? "");
+      const dadosQuestao = request.body; 
+      const arquivoImagem = request.file;
+      const usuarioId = request.usuario?.id ?? "";
+
+      const questao = await this.questionService.criar(
+        dadosQuestao, 
+        arquivoImagem, 
+        usuarioId
+      );
 
       return response.status(201).json({
-        mensagem: MENSAGENS.questaoCriada,
+        mensagem: "Questão criada com sucesso!",
         dados: questao,
       });
     } catch (error) {
@@ -70,15 +77,43 @@ export class QuestionController {
     }
   };
 
-  atualizar = async (request: Request, response: Response, next: NextFunction) => {
+atualizar = async (
+    request: Request, 
+    response: Response, 
+    next: NextFunction
+  ) => {
     try {
-      
       const id = request.params.id as string; 
       
+      // 1. Fazemos a cópia do body para não mutar o objeto original
+      const dadosQuestao = { ...request.body };
+
+      // 2. Reconstruímos as alternativas caso elas venham "achatadas" na edição
+      if (!dadosQuestao.alternativas) {
+        // Verifica se existe alguma chave começando com "alternativas["
+        const temAlternativas = Object.keys(dadosQuestao).some(key => key.startsWith('alternativas['));
+        
+        if (temAlternativas) {
+          dadosQuestao.alternativas = {};
+          for (const key in dadosQuestao) {
+            const match = key.match(/^alternativas\[([A-E])\]$/);
+            if (match) {
+              const letra = match[1];
+              dadosQuestao.alternativas[letra] = dadosQuestao[key];
+              delete dadosQuestao[key];
+            }
+          }
+        }
+      }
+
+      const arquivoImagem = request.file;
+      const usuarioId = request.usuario?.id ?? "";
+
       const questao = await this.questionService.atualizar(
         id, 
-        request.body, 
-        request.usuario?.id ?? ""
+        dadosQuestao, 
+        arquivoImagem,
+        usuarioId
       );
 
       return response.status(200).json({

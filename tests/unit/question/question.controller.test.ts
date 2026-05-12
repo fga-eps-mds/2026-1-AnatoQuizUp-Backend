@@ -43,6 +43,15 @@ describe("QuestionController", () => {
   let questionService: jest.Mocked<QuestionService>;
   let controller: QuestionController;
 
+  const imagemMock = {
+    fieldname: 'imagem',
+    originalname: 'femur.jpeg',
+    encoding: '7bit',
+    mimetype: 'image/jpeg',
+    buffer: Buffer.from('arquivo-fake-binario'),
+    size: 1024,
+  } as Express.Multer.File;
+
   beforeEach(() => {
     questionService = {
       listar: jest.fn(),
@@ -56,14 +65,14 @@ describe("QuestionController", () => {
     jest.clearAllMocks();
   });
 
-  test("criar responde 201 com mensagem e dados", async () => {
+test("criar responde 201 com mensagem e dados", async () => {
     const questao = criarQuestaoResposta();
     questionService.criar.mockResolvedValue(questao);
+    
     const body: CriarQuestaoDto = {
       tema: "Anatomia",
       enunciado: "Enunciado",
       tipo: "MULTIPLA_ESCOLHA",
-      imagem: "https://cdn.example.com/imagem.png",
       alternativaCorreta: "A",
       explicacaoPedagogica: "Explicacao",
       alternativas: { A: "A", B: "B", C: "C", D: "D", E: "E" },
@@ -71,17 +80,18 @@ describe("QuestionController", () => {
     
     const request = {
       body,
+      file: imagemMock,
       usuario: { id: "professor-1" },
     } as unknown as Request;
 
     const { response, status, json } = criarResponseMock<RespostaApiSucesso<RespostaQuestaoDto>>();
-
+    
     await controller.criar(request, response, next);
 
-    expect(questionService.criar).toHaveBeenCalledWith(body, "professor-1");
+    expect(questionService.criar).toHaveBeenCalledWith(body, imagemMock, "professor-1");
     expect(status).toHaveBeenCalledWith(201);
     expect(json).toHaveBeenCalledWith({
-      mensagem: MENSAGENS.questaoCriada,
+      mensagem: "Questão criada com sucesso!",
       dados: questao,
     });
   });

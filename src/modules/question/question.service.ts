@@ -21,9 +21,14 @@ import {
 } from "./dto/question.types";
 import type { QuestionRepository } from "./question.repository";
 import type {AlternativaQuestao, Dificuldade } from "@prisma/client";
+import type { MinioService } from './minio.service';
 
 export class QuestionService {
-  constructor(private readonly questionRepository: QuestionRepository) {}
+  constructor(
+    private readonly questionRepository: QuestionRepository,
+    private readonly minioService: MinioService,
+  ) {}
+  
 
   async listar(query: ListarQuestoesQueryDto): Promise<RespostaPaginada<RespostaQuestaoDto>> {
     const paginacao = resolverParametrosPaginacao(query);
@@ -55,7 +60,12 @@ export class QuestionService {
     };
   }
 
-  async criar(data: CriarQuestaoDto, criadoPorId: string): Promise<RespostaQuestaoDto> {
+  async criar(
+    data: CriarQuestaoDto, 
+    arquivoImagem: Express.Multer.File | undefined, 
+    criadoPorId: string
+  ): Promise<RespostaQuestaoDto> {
+    
     if (!criadoPorId) {
       throw new ErroAplicacao({
         codigoStatus: 401,
@@ -66,21 +76,44 @@ export class QuestionService {
 
     this.validarQuestao(data);
 
-    const questao = await this.questionRepository.criar(data, criadoPorId);
+    let urlImagemMinio: string | undefined = undefined;
+
+    if (arquivoImagem) {
+      urlImagemMinio = await this.minioService.uploadImagem(arquivoImagem);
+    }
+
+    const dadosParaSalvar = {
+      ...data,
+      imagem: urlImagemMinio ?? data.imagem ?? "" 
+    };
+
+    const questao = await this.questionRepository.criar(dadosParaSalvar, criadoPorId);
 
     return converterParaRespostaQuestao(questao);
   }
 
-  async atualizar(id: string, data: AtualizarQuestaoDto, usuarioId: string): Promise<RespostaQuestaoDto> {
+async atualizar(
+    id: string, 
+    data: AtualizarQuestaoDto, 
+    arquivoImagem: Express.Multer.File | undefined, 
+    usuarioId: string
+  ): Promise<RespostaQuestaoDto> {
+    
     const questaoAntiga = await this.questionRepository.buscarPorId(id);
     if (!questaoAntiga) throw this.erroQuestaoNaoEncontrada(id);
+
+    let urlImagemFinal = questaoAntiga.urlImagem ?? "";
+
+    if (arquivoImagem) {
+      urlImagemFinal = await this.minioService.uploadImagem(arquivoImagem); 
+    }
 
     const dadosNovaQuestao: CriarQuestaoDto = {
       tema: data.tema ?? questaoAntiga.tema.nome,
       enunciado: data.enunciado ?? questaoAntiga.enunciado,
       tipo: data.tipo ?? mapearTipoBancoParaApi(questaoAntiga.tipoQuestao),
       dificuldade: (data.dificuldade ?? questaoAntiga.dificuldade) as Dificuldade,
-      imagem: data.imagem ?? questaoAntiga.urlImagem ?? "",
+      imagem: urlImagemFinal,
       alternativaCorreta: (data.alternativaCorreta ?? questaoAntiga.respostaCorreta) as AlternativaQuestao,
       explicacaoPedagogica: data.explicacaoPedagogica ?? questaoAntiga.saibaMais ?? "",
       alternativas: (data.alternativas ?? this.extrairAlternativasAtuais(questaoAntiga)) as AlternativasQuestaoDto,
