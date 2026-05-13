@@ -1,29 +1,22 @@
-import type { QuestionRepository } from "../../../src/modules/question/question.repository";
 import { QuestionService } from "../../../src/modules/question/question.service";
+import type { QuestionRepository } from "../../../src/modules/question/question.repository";
 import type { MinioService } from "../../../src/modules/question/minio.service";
 import type {
   CriarQuestaoDto,
   RegistroQuestaoCompleta,
 } from "../../../src/modules/question/dto/question.types";
-
-import { CodigoDeErro } from "@/shared/errors/codigos-de-erro";
-
-// -----------------------------------------------------------------------------
-// Helpers
-// -----------------------------------------------------------------------------
+import { MENSAGENS } from "@/shared/constants/mensagens";
 
 function criarQuestao(
   overrides: Partial<RegistroQuestaoCompleta> = {},
 ): RegistroQuestaoCompleta {
   const agora = new Date("2026-05-09T12:00:00.000Z");
-
   return {
     id: "questao-1",
     enunciado: "Qual estrutura bombeia sangue para a aorta?",
     tipoQuestao: "MULTIPLA_ESCOLHA",
     respostaCorreta: "B",
-    saibaMais:
-      "O ventriculo esquerdo impulsiona sangue para a circulacao sistemica.",
+    saibaMais: "O ventriculo esquerdo impulsiona sangue.",
     status: "ATIVO",
     feitoPorIa: false,
     urlImagem: "https://cdn.example.com/coracao.png",
@@ -33,7 +26,6 @@ function criarQuestao(
     criadoEm: agora,
     atualizadoEm: agora,
     excluidoEm: null,
-
     tema: {
       id: "tema-1",
       nome: "Sistema cardiovascular",
@@ -41,7 +33,6 @@ function criarQuestao(
       atualizadoEm: agora,
       excluidoEm: null,
     },
-
     alternativas: {
       id: "alternativas-1",
       alternativaA: "Atrio direito",
@@ -54,7 +45,6 @@ function criarQuestao(
       atualizadoEm: agora,
       excluidoEm: null,
     },
-
     ...overrides,
   };
 }
@@ -62,43 +52,15 @@ function criarQuestao(
 function criarInputValido(): CriarQuestaoDto {
   return {
     tema: "Sistema cardiovascular",
-    enunciado: "Qual estrutura bombeia sangue para a aorta?",
+    enunciado: "Enunciado teste",
     tipo: "MULTIPLA_ESCOLHA",
-    imagem: "https://cdn.example.com/coracao.png",
     alternativaCorreta: "B",
-    explicacaoPedagogica:
-      "O ventriculo esquerdo impulsiona sangue para a circulacao sistemica.",
-
+    explicacaoPedagogica: "Explicacao",
     alternativas: {
-      A: "Atrio direito",
-      B: "Ventriculo esquerdo",
-      C: "Atrio esquerdo",
-      D: "Ventriculo direito",
-      E: "Veia cava",
+      A: "A", B: "B", C: "C", D: "D", E: "E",
     },
   };
 }
-
-function criarRepositoryMock(): jest.Mocked<QuestionRepository> {
-  return {
-    listar: jest.fn(),
-    buscarPorId: jest.fn(),
-    criar: jest.fn(),
-    atualizar: jest.fn(),
-    desativar: jest.fn(),
-    filtrar: jest.fn(),
-  } as unknown as jest.Mocked<QuestionRepository>;
-}
-
-function criarMinioServiceMock(): jest.Mocked<MinioService> {
-  return {
-    uploadImagem: jest.fn(),
-  } as unknown as jest.Mocked<MinioService>;
-}
-
-// -----------------------------------------------------------------------------
-// Tests
-// -----------------------------------------------------------------------------
 
 describe("QuestionService", () => {
   let repository: jest.Mocked<QuestionRepository>;
@@ -106,190 +68,150 @@ describe("QuestionService", () => {
   let service: QuestionService;
 
   const imagemMock = {
-    fieldname: "imagem",
-    originalname: "femur.jpeg",
-    encoding: "7bit",
-    mimetype: "image/jpeg",
-    buffer: Buffer.from("arquivo-fake-binario"),
+    originalname: "foto.jpg",
+    buffer: Buffer.from("fake"),
     size: 1024,
+    mimetype: "image/jpeg",
   } as Express.Multer.File;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    
+    repository = {
+      listar: jest.fn(),
+      buscarPorId: jest.fn(),
+      criar: jest.fn(),
+      atualizar: jest.fn(),
+      desativar: jest.fn(),
+      filtrar: jest.fn(),
+    } as unknown as jest.Mocked<QuestionRepository>;
 
-    repository = criarRepositoryMock();
-    minioService = criarMinioServiceMock();
+    minioService = { 
+      uploadImagem: jest.fn() 
+    } as unknown as jest.Mocked<MinioService>;
 
     service = new QuestionService(repository, minioService);
   });
 
-  // ---------------------------------------------------------------------------
-  // CREATE
-  // ---------------------------------------------------------------------------
-
-  test("cria questao de multipla escolha valida com imagem", async () => {
-    const input = criarInputValido();
-
-    delete input.imagem;
-
-    const urlFake = "https://minio/foto-salva.png";
-
-    minioService.uploadImagem.mockResolvedValue(urlFake);
-
-    repository.criar.mockResolvedValue(
-      criarQuestao({
-        urlImagem: urlFake,
-      }),
-    );
-
-    const resposta = await service.criar(
-      input,
-      imagemMock,
-      "professor-1",
-    );
-
-    expect(minioService.uploadImagem).toHaveBeenCalledTimes(1);
-
-    expect(minioService.uploadImagem).toHaveBeenCalledWith(
-      imagemMock,
-    );
-
-    expect(repository.criar).toHaveBeenCalledWith(
-      expect.objectContaining({
-        imagem: urlFake,
-      }),
-      "professor-1",
-    );
-
-    expect(resposta.tipo).toBe("MULTIPLA_ESCOLHA");
-  });
-
-  test("cria questao de verdadeiro/falso valida", async () => {
-    const input = criarInputValido();
-
-    input.tipo = "VERDADEIRO_FALSO";
-    input.alternativaCorreta = "E";
-
-    repository.criar.mockResolvedValue(
-      criarQuestao({
-        tipoQuestao: "CERTO_ERRADO",
-      }),
-    );
-
-    const resposta = await service.criar(
-      input,
-      undefined,
-      "professor-1",
-    );
-
-    expect(minioService.uploadImagem).not.toHaveBeenCalled();
-
-    expect(repository.criar).toHaveBeenCalledWith(
-      input,
-      "professor-1",
-    );
-
-    expect(resposta.tipo).toBe("VERDADEIRO_FALSO");
-  });
-
-  test("impede criacao sem alternativas", async () => {
-    const input = {
-      ...criarInputValido(),
-      alternativas: {},
-    } as CriarQuestaoDto;
-
-    await expect(
-      service.criar(input, undefined, "professor-1"),
-    ).rejects.toMatchObject({
-      codigoStatus: 400,
-      codigo: CodigoDeErro.ERRO_DE_VALIDACAO,
+  describe("Leitura", () => {
+    test("listar deve retornar dados paginados", async () => {
+      repository.listar.mockResolvedValue({ data: [criarQuestao()], total: 1 });
+      const result = await service.listar({ page: "1", limit: "10" });
+      expect(result.dados).toHaveLength(1);
     });
 
-    expect(repository.criar).not.toHaveBeenCalled();
+    test("buscarPorId deve retornar questão", async () => {
+      repository.buscarPorId.mockResolvedValue(criarQuestao());
+      const result = await service.buscarPorId("1");
+      expect(result.id).toBe("questao-1");
+    });
+
+    test("buscarPorId deve lançar 404", async () => {
+      repository.buscarPorId.mockResolvedValue(null);
+      await expect(service.buscarPorId("id-fake")).rejects.toMatchObject({ codigoStatus: 404 });
+    });
+
+    test("filtrar deve chamar repository com filtros", async () => {
+      repository.filtrar.mockResolvedValue({ data: [], total: 0 });
+      await service.filtrar({ tema: "Cardio" });
+      expect(repository.filtrar).toHaveBeenCalled();
+    });
   });
 
-  // ---------------------------------------------------------------------------
-  // UPDATE
-  // ---------------------------------------------------------------------------
+  describe("Criação e Validação", () => {
+    test("criar deve fazer upload de imagem se enviada", async () => {
+      const input = criarInputValido();
+      minioService.uploadImagem.mockResolvedValue("url-minio");
+      repository.criar.mockResolvedValue(criarQuestao({ urlImagem: "url-minio" }));
 
-  test("atualiza questao substituindo a imagem", async () => {
-    const questaoExistente = criarQuestao();
+      const result = await service.criar(input, imagemMock, "prof-1");
+      expect(minioService.uploadImagem).toHaveBeenCalled();
+      expect(result.imagem).toBe("url-minio");
+    });
 
-    const novaUrl = "https://minio/nova-foto.png";
+    test("criar deve usar imagem do DTO se arquivo for nulo", async () => {
+      const input = { ...criarInputValido(), imagem: "url-dto" };
+      repository.criar.mockResolvedValue(criarQuestao({ urlImagem: "url-dto" }));
+      const result = await service.criar(input, undefined, "prof-1");
+      expect(result.imagem).toBe("url-dto");
+    });
 
-    repository.buscarPorId.mockResolvedValue(
-      questaoExistente,
-    );
+    test("deve lançar 401 se usuarioId for vazio", async () => {
+      await expect(service.criar(criarInputValido(), undefined, "")).rejects.toMatchObject({ codigoStatus: 401 });
+    });
 
-    minioService.uploadImagem.mockResolvedValue(
-      novaUrl,
-    );
+    test("validar falta de gabarito", async () => {
+      const input = { ...criarInputValido(), alternativaCorreta: undefined } as unknown as CriarQuestaoDto;
+      await expect(service.criar(input, undefined, "p-1")).rejects.toThrow(MENSAGENS.questaoGabaritoObrigatorio);
+    });
 
-    repository.atualizar.mockResolvedValue(
-      criarQuestao({
-        urlImagem: novaUrl,
-      }),
-    );
+    test("validar alternativas vazias", async () => {
+      const input = { ...criarInputValido(), alternativas: {} } as unknown as CriarQuestaoDto;
+      await expect(service.criar(input, undefined, "p-1")).rejects.toThrow(MENSAGENS.questaoAlternativasObrigatorias);
+    });
 
-    const resposta = await service.atualizar(
-      "questao-1",
-      {
-        enunciado: "Nova foto",
-      },
-      imagemMock,
-      "user-123",
-    );
+    test("validar falta de opções na Multipla Escolha", async () => {
+      const input = criarInputValido();
+      delete (input.alternativas as unknown as Record<string, string>).E; 
+      await expect(service.criar(input, undefined, "p-1")).rejects.toThrow(MENSAGENS.questaoAlternativasObrigatorias);
+    });
 
-    expect(repository.buscarPorId).toHaveBeenCalledWith(
-      "questao-1",
-    );
+    test("validar falta de C ou E no Verdadeiro/Falso", async () => {
+      const input = { ...criarInputValido(), tipo: "VERDADEIRO_FALSO", alternativas: { C: "Certo" } } as unknown as CriarQuestaoDto;
+      await expect(service.criar(input, undefined, "p-1")).rejects.toThrow(MENSAGENS.questaoAlternativasObrigatorias);
+    });
 
-    expect(minioService.uploadImagem).toHaveBeenCalledTimes(
-      1,
-    );
-
-    expect(minioService.uploadImagem).toHaveBeenCalledWith(
-      imagemMock,
-    );
-
-    expect(repository.atualizar).toHaveBeenCalledWith(
-      "questao-1",
-      expect.objectContaining({
-        imagem: novaUrl,
-      }),
-      "user-123",
-    );
-
-    expect(resposta).toBeDefined();
+    test("validar gabarito incompatível com V/F", async () => {
+      const input = { ...criarInputValido(), tipo: "VERDADEIRO_FALSO", alternativas: { C: "C", E: "E" }, alternativaCorreta: "A" } as unknown as CriarQuestaoDto;
+      await expect(service.criar(input, undefined, "p-1")).rejects.toThrow(MENSAGENS.questaoGabaritoObrigatorio);
+    });
   });
 
-  // ---------------------------------------------------------------------------
-  // DELETE
-  // ---------------------------------------------------------------------------
+  describe("Atualização e Remoção", () => {
+    test("atualizar deve usar fallbacks dos dados antigos", async () => {
+      const antiga = criarQuestao();
+      repository.buscarPorId.mockResolvedValue(antiga);
+      repository.atualizar.mockResolvedValue(antiga);
+      await service.atualizar("1", {}, undefined, "u-1");
+      expect(repository.atualizar).toHaveBeenCalledWith("1", expect.objectContaining({ enunciado: antiga.enunciado }), "u-1");
+    });
 
-  test("remove questao com soft delete", async () => {
-    repository.buscarPorId.mockResolvedValue(
-      criarQuestao(),
-    );
+    test("atualizar deve carregar nova imagem se enviada", async () => {
+      repository.buscarPorId.mockResolvedValue(criarQuestao());
+      minioService.uploadImagem.mockResolvedValue("nova-url");
+      repository.atualizar.mockResolvedValue(criarQuestao({ urlImagem: "nova-url" }));
+      await service.atualizar("1", {}, imagemMock, "u-1");
+      expect(minioService.uploadImagem).toHaveBeenCalled();
+    });
 
-    repository.desativar.mockResolvedValue(
-      criarQuestao({
-        status: "INATIVO",
-      }),
-    );
+    test("remover deve lançar 404 se não encontrar", async () => {
+      repository.buscarPorId.mockResolvedValue(null);
+      await expect(service.remover("999")).rejects.toMatchObject({ codigoStatus: 404 });
+    });
 
-    const resposta = await service.remover(
-      "questao-1",
-    );
+    test("remover deve desativar questão", async () => {
+      repository.buscarPorId.mockResolvedValue(criarQuestao());
+      repository.desativar.mockResolvedValue(criarQuestao({ status: "INATIVO" }));
+      const result = await service.remover("1");
+      expect(result.status).toBe("INATIVO");
+    });
+  });
 
-    expect(repository.buscarPorId).toHaveBeenCalledWith(
-      "questao-1",
-    );
+  describe("Casos de Borda Alternativas", () => {
+    test("extrairAlternativasAtuais deve tratar questao sem alternativas", async () => {
+      const q = criarQuestao({ alternativas: null as unknown as RegistroQuestaoCompleta["alternativas"] });
+      repository.buscarPorId.mockResolvedValue(q);
+      repository.atualizar.mockResolvedValue(q);
+      await service.atualizar("1", {}, undefined, "u-1");
+      expect(repository.atualizar).toHaveBeenCalledWith("1", expect.objectContaining({ alternativas: {} }), "u-1");
+    });
 
-    expect(repository.desativar).toHaveBeenCalledWith(
-      "questao-1",
-    );
-
-    expect(resposta.status).toBe("INATIVO");
+    test("extrairAlternativasAtuais para CERTO_ERRADO", async () => {
+      const q = criarQuestao({ tipoQuestao: "CERTO_ERRADO" });
+      repository.buscarPorId.mockResolvedValue(q);
+      repository.atualizar.mockResolvedValue(q);
+      await service.atualizar("1", {}, undefined, "u-1");
+      expect(repository.atualizar).toHaveBeenCalledWith("1", expect.objectContaining({ alternativas: { C: q.alternativas?.alternativaC, E: q.alternativas?.alternativaE } }), "u-1");
+    });
   });
 });

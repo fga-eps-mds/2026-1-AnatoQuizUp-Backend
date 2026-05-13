@@ -249,4 +249,56 @@ test("criar responde 201 com mensagem e dados", async () => {
     await controller.remover(request, response, next);
     expect(next).toHaveBeenCalledWith(erro);
   });
+
+  test("atualizar deve reconstruir alternativas quando enviadas no formato flat (multipart/form-data)", async () => {
+    const questao = criarQuestaoResposta();
+    questionService.atualizar.mockResolvedValue(questao);
+    
+    const request = {
+      params: { id: "questao-1" },
+      body: { 
+        enunciado: "Novo enunciado",
+        "alternativas[A]": "Opção A",
+        "alternativas[B]": "Opção B"
+      },
+      usuario: { id: "user-123" }
+    } as unknown as Request;
+
+    const { response, status } = criarResponseMock();
+
+    await controller.atualizar(request, response, next);
+
+    expect(questionService.atualizar).toHaveBeenCalledWith(
+      "questao-1",
+      expect.objectContaining({
+        alternativas: { A: "Opção A", B: "Opção B" }
+      }),
+      undefined,
+      "user-123"
+    );
+    expect(status).toHaveBeenCalledWith(200);
+  });
+
+  test("criar deve usar string vazia se o id do usuário não estiver presente", async () => {
+  const questao = criarQuestaoResposta();
+  questionService.criar.mockResolvedValue(questao);
+  
+  const request = {
+    body: { enunciado: "Teste" },
+  } as unknown as Request;
+
+  const { response } = criarResponseMock();
+
+  await controller.criar(request, response, next);
+
+  expect(questionService.criar).toHaveBeenCalledWith(expect.anything(), undefined, "");
+});
+test("buscarPorId deve chamar next em caso de erro", async () => {
+  const erro = new Error("Erro buscar");
+  questionService.buscarPorId.mockRejectedValue(erro);
+  const request = { params: { id: "1" } } as unknown as Request;
+  const { response } = criarResponseMock();
+  await controller.buscarPorId(request, response, next);
+  expect(next).toHaveBeenCalledWith(erro);
+});
 });
