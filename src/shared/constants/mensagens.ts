@@ -20,7 +20,7 @@ export const MENSAGENS = {
   usuarioAutoDesativacaoNaoPermitida: "Nao e permitido desativar o proprio usuario.",
   usuarioAdminNaoPodeSerAlterado: "Nao e permitido alterar o status de outro administrador.",
   contextoAdminObrigatorio:
-    "Os cabecalhos x-usuario-id e x-usuario-perfil sao obrigatorios para esta operacao.",
+    "O usuario autenticado precisa ser ADMIN para esta operacao.",
   usuarioCadastrado: "Usuario cadastrado com sucesso.",
   emailJaCadastrado: "Email ja cadastrado.",
   siapeJaCadastrado: "SIAPE ja cadastrado.",
