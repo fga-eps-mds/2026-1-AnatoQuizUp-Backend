@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 
 import { MENSAGENS } from "@/shared/constants/mensagens";
+import { PAPEIS } from "@/shared/constants/papeis";
 import type { RespostaApiSucesso, RespostaPaginada } from "@/shared/types/api.types";
 
 import type {
@@ -70,15 +71,11 @@ export class AdminController {
   private extrairContextoAdmin(
     request: Request,
   ): ContextoAdminDto {
-    const idHeader = request.headers["x-usuario-id"];
-    const perfilHeader = request.headers["x-usuario-perfil"];
-
-    const id = Array.isArray(idHeader) ? idHeader[0] : idHeader ?? null;
-    const perfil = Array.isArray(perfilHeader) ? perfilHeader[0] : perfilHeader ?? null;
+    const usuario = request.usuario;
 
     return {
-      id,
-      perfil: perfil === "ADMIN" ? "ADMIN" : null,
+      id: usuario?.id ?? null,
+      perfil: usuario?.papel === PAPEIS.ADMINISTRADOR ? "ADMIN" : null,
     };
   }
 }

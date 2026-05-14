@@ -40,33 +40,6 @@ enum NivelEducacional {
   OUTRO
 }
 
-enum TipoQuestao {
-  MULTIPLA_ESCOLHA
-  CERTO_ERRADO
-}
-
-// Representa a alternativa selecionada/correta.
-// Para MULTIPLA_ESCOLHA: A, B, C, D ou E.
-// Para CERTO_ERRADO: C = Certo e E = Errado.
-enum AlternativaQuestao {
-  A
-  B
-  C
-  D
-  E
-}
-
-enum StatusQuestao {
-  ATIVO
-  INATIVO
-}
-
-enum Dificuldade {
-  FACIL
-  MEDIA
-  DIFICIL
-}
-
 model Usuario {
   id       String  @id @default(cuid())
   nome     String
@@ -77,7 +50,6 @@ model Usuario {
   perfil PerfilUsuario
   status StatusUsuario @default(ATIVO)
 
-  // Campos específicos de aluno
   instituicao      String?
   curso            String?
   semestre         String?
@@ -87,19 +59,14 @@ model Usuario {
   dataNascimento   DateTime?
   nivelEducacional NivelEducacional?
 
-  // Campos específicos de professor
   departamento String?
   siape        String? @unique
 
-  // Controle de aprovação
   aprovadoPorId String?
   aprovadoEm    DateTime?
 
   refreshTokens          RefreshToken[]
   tokensRedefinicaoSenha TokenRedefinicaoSenha[]
-
-  questoesCriadas Questao[]          @relation("QuestoesCriadas")
-  resolucoes      ResolucaoQuestao[]
 
   criadoEm     DateTime  @default(now())
   atualizadoEm DateTime  @updatedAt
@@ -134,88 +101,4 @@ model TokenRedefinicaoSenha {
   usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
   @@map("tokens_redefinicao_senha")
-}
-
-model Tema {
-  id   String @id @default(cuid())
-  nome String
-
-  questoes Questao[]
-
-  criadoEm     DateTime  @default(now())
-  atualizadoEm DateTime  @updatedAt
-  excluidoEm   DateTime?
-
-  @@map("temas")
-}
-
-model Questao {
-  id              String             @id @default(cuid())
-  enunciado       String
-  tipoQuestao     TipoQuestao
-  respostaCorreta AlternativaQuestao
-  saibaMais       String?
-  status          StatusQuestao      @default(ATIVO)
-  feitoPorIa      Boolean            @default(false)
-  urlImagem       String?
-
-  criadoPorId String
-  temaId      String
-
-  // Guarda o id da questão original quando esta questão for uma nova versão.
-  questaoOriginalId String?
-  // Permite acessar a questão original a partir desta versão.
-  questaoOriginal   Questao?  @relation("VersoesQuestao", fields: [questaoOriginalId], references: [id])
-  // Lista as versões criadas a partir desta questão.
-  versoes           Questao[] @relation("VersoesQuestao")
-
-  criadoPor Usuario @relation("QuestoesCriadas", fields: [criadoPorId], references: [id], onDelete: Restrict)
-  tema      Tema    @relation(fields: [temaId], references: [id], onDelete: Restrict)
-
-  alternativas QuestaoAlternativa?
-  resolucoes   ResolucaoQuestao[]
-
-  dificuldade Dificuldade @default(MEDIA)
-
-  criadoEm     DateTime  @default(now())
-  atualizadoEm DateTime  @updatedAt
-  excluidoEm   DateTime?
-
-  @@map("questoes")
-}
-
-model QuestaoAlternativa {
-  id String @id @default(cuid())
-
-  alternativaA String
-  alternativaB String
-  alternativaC String
-  alternativaD String
-  alternativaE String
-
-  questaoId String  @unique
-  questao   Questao @relation(fields: [questaoId], references: [id], onDelete: Restrict)
-
-  criadoEm     DateTime  @default(now())
-  atualizadoEm DateTime  @updatedAt
-  excluidoEm   DateTime?
-
-  @@map("questoes_alternativas")
-}
-
-model ResolucaoQuestao {
-  id              String             @id @default(cuid())
-  respostaMarcada AlternativaQuestao
-
-  usuarioId String
-  questaoId String
-
-  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Restrict)
-  questao Questao @relation(fields: [questaoId], references: [id], onDelete: Restrict)
-
-  criadoEm     DateTime  @default(now())
-  atualizadoEm DateTime  @updatedAt
-  excluidoEm   DateTime?
-
-  @@map("resolucoes_questoes")
 }
