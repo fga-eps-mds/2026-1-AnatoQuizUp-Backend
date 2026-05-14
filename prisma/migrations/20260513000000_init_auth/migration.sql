@@ -1,3 +1,6 @@
+-- CreateSchema
+CREATE SCHEMA IF NOT EXISTS "public";
+
 -- CreateEnum
 CREATE TYPE "PerfilUsuario" AS ENUM ('ALUNO', 'PROFESSOR', 'ADMIN');
 
@@ -5,19 +8,31 @@ CREATE TYPE "PerfilUsuario" AS ENUM ('ALUNO', 'PROFESSOR', 'ADMIN');
 CREATE TYPE "StatusUsuario" AS ENUM ('PENDENTE', 'ATIVO', 'INATIVO', 'RECUSADO');
 
 -- CreateEnum
-CREATE TYPE "NivelEducacional" AS ENUM ('ENSINO_MEDIO', 'GRADUACAO', 'POS_GRADUACAO', 'MESTRADO', 'DOUTORADO', 'OUTRO');
+CREATE TYPE "NivelEducacional" AS ENUM ('ENSINO_FUNDAMENTAL', 'ENSINO_MEDIO', 'GRADUACAO', 'POS_GRADUACAO', 'MESTRADO', 'DOUTORADO', 'OUTRO');
+
+-- CreateTable
+CREATE TABLE "exemplos" (
+    "id" TEXT NOT NULL,
+    "nome" TEXT NOT NULL,
+    "descricao" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "exemplos_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable
 CREATE TABLE "usuarios" (
     "id" TEXT NOT NULL,
     "nome" TEXT NOT NULL,
+    "nickname" TEXT,
     "email" TEXT NOT NULL,
     "senha" TEXT NOT NULL,
     "perfil" "PerfilUsuario" NOT NULL,
     "status" "StatusUsuario" NOT NULL DEFAULT 'ATIVO',
     "instituicao" TEXT,
     "curso" TEXT,
-    "semestre" INTEGER,
+    "semestre" TEXT,
     "estado" TEXT,
     "cidade" TEXT,
     "nacionalidade" TEXT,
@@ -59,6 +74,9 @@ CREATE TABLE "tokens_redefinicao_senha" (
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "usuarios_nickname_key" ON "usuarios"("nickname");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "usuarios_email_key" ON "usuarios"("email");
 
 -- CreateIndex
@@ -75,3 +93,4 @@ ALTER TABLE "refresh_tokens" ADD CONSTRAINT "refresh_tokens_usuarioId_fkey" FORE
 
 -- AddForeignKey
 ALTER TABLE "tokens_redefinicao_senha" ADD CONSTRAINT "tokens_redefinicao_senha_usuarioId_fkey" FOREIGN KEY ("usuarioId") REFERENCES "usuarios"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+

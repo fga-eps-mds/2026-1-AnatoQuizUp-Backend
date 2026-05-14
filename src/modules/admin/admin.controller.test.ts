@@ -99,17 +99,14 @@ describe("AdminController", () => {
     });
   });
 
-  test("alterarStatus extrai contexto do admin dos headers e responde com sucesso", async () => {
+  test("alterarStatus extrai contexto do usuario autenticado e responde com sucesso", async () => {
     const usuario = criarUsuarioResposta({ status: "INATIVO" });
     adminService.alterarStatus.mockResolvedValue(usuario);
 
     const request = {
       params: { id: "user-1" },
       body: { status: "INACTIVE" } satisfies AlterarStatusUserDto,
-      headers: {
-        "x-usuario-id": "admin-1",
-        "x-usuario-perfil": "ADMIN",
-      },
+      usuario: { id: "admin-1", email: "admin@example.com", papel: "ADMINISTRADOR" },
     } as unknown as Request<{ id: string }, unknown, AlterarStatusUserDto>;
     const { response, status, json } = criarResponseMock<RespostaApiSucesso<RespostaUserDto>>();
 
@@ -152,16 +149,17 @@ describe("AdminController", () => {
     expect(next).toHaveBeenCalledWith(erro);
   });
 
-  test("alterarStatus usa primeiro valor de headers repetidos", async () => {
+  test("alterarStatus ignora headers e usa usuario autenticado", async () => {
     const usuario = criarUsuarioResposta({ status: "INATIVO" });
     adminService.alterarStatus.mockResolvedValue(usuario);
 
     const request = {
       params: { id: "user-1" },
       body: { status: "INACTIVE" } satisfies AlterarStatusUserDto,
+      usuario: { id: "admin-1", email: "admin@example.com", papel: "ADMINISTRADOR" },
       headers: {
-        "x-usuario-id": ["admin-1", "admin-2"],
-        "x-usuario-perfil": ["ADMIN", "ALUNO"],
+        "x-user-id": ["outro-admin", "admin-1"],
+        "x-user-papel": ["ALUNO", "ADMINISTRADOR"],
       },
     } as unknown as Request<{ id: string }, unknown, AlterarStatusUserDto>;
     const { response } = criarResponseMock<RespostaApiSucesso<RespostaUserDto>>();
@@ -182,9 +180,7 @@ describe("AdminController", () => {
     const request = {
       params: { id: "user-1" },
       body: { status: "INACTIVE" } satisfies AlterarStatusUserDto,
-      headers: {
-        "x-usuario-perfil": "ALUNO",
-      },
+      usuario: { id: "aluno-1", email: "aluno@example.com", papel: "ALUNO" },
     } as unknown as Request<{ id: string }, unknown, AlterarStatusUserDto>;
     const { response } = criarResponseMock<RespostaApiSucesso<RespostaUserDto>>();
 
@@ -193,7 +189,7 @@ describe("AdminController", () => {
     expect(adminService.alterarStatus).toHaveBeenCalledWith(
       "user-1",
       { status: "INACTIVE" },
-      { id: null, perfil: null },
+      { id: "aluno-1", perfil: null },
     );
   });
 
