@@ -7,6 +7,7 @@ import type {
   CriarQuestaoDto,
   ListarQuestoesQueryDto,
   RespostaQuestaoDto,
+  RespostaQuestaoQuizDto,
 } from "./dto/question.types";
 import type { QuestionService } from "./question.service";
 
@@ -106,4 +107,17 @@ export class QuestionController {
       return next(error);
     }
   };
+
+  filtrar_quiz = async(request: Request, response: Response<RespostaApiSucesso<RespostaQuestaoQuizDto>>, next: NextFunction) => {
+    try{
+      const questao_quiz = await this.questionService.filtrar_questao_quiz(request.query);
+
+      return response.status(200).json({
+        mensagem: MENSAGENS.questaoEncontrada,
+        dados: questao_quiz,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
 }

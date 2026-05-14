@@ -20,8 +20,10 @@ const questionService = new QuestionService(questionRepository);
 const questionController = new QuestionController(questionService);
 
 const questionRouter = Router();
+const quizRouter = Router()
 
 questionRouter.use(middlewarePapeis(PAPEIS.PROFESSOR, PAPEIS.ADMINISTRADOR));
+quizRouter.use(middlewarePapeis(PAPEIS.ALUNO, PAPEIS.ADMINISTRADOR));
 
 questionRouter.post("/", validarRequisicao(schemaCriarQuestao), questionController.criar);
 questionRouter.get(
@@ -53,4 +55,6 @@ questionRouter.delete(
   questionController.remover,
 );
 
-export { questionRouter };
+quizRouter.get("/quiz", questionController.filtrar);
+
+export { questionRouter, quizRouter };

@@ -2,11 +2,13 @@ import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/config/db";
 import type { ParametrosPaginacao } from "@/shared/utils/paginacao.util";
-
-import type { CriarQuestaoDto, FiltroListarQuestoesQueryDto, RegistroQuestaoCompleta } from "./dto/question.types";
-import type {
-  AlternativasMultiplaEscolhaDto,
-  AlternativasVerdadeiroFalsoDto,
+import type { 
+  CriarQuestaoDto, 
+  FiltroListarQuestoesQueryDto, 
+  FiltroQuestaoQuizQueryDto, 
+  RegistroQuestaoCompleta, 
+  AlternativasMultiplaEscolhaDto, 
+  AlternativasVerdadeiroFalsoDto, 
 } from "./dto/question.types";
 import { mapearTipoApiParaBanco } from "./dto/question.types";
 
@@ -76,6 +78,32 @@ export class QuestionRepository {
     ]);
 
     return { data: data as RegistroQuestaoCompleta[], total };
+  }
+
+  async filtrar_quiz(filtros: FiltroQuestaoQuizQueryDto) {
+    const where: Prisma.QuestaoWhereInput = {
+      excluidoEm: null,
+      status: "ATIVO",
+    };
+
+    if (filtros.tema) {
+      where.tema = { nome: { contains: filtros.tema, mode: 'insensitive' } };
+    }
+    
+    if (filtros.dificuldade) {
+      where.dificuldade = filtros.dificuldade;
+    }
+    
+    if (filtros.tipo) {
+      where.tipoQuestao = mapearTipoApiParaBanco(filtros.tipo);
+    }
+
+    const numero_questoes = await prisma.questao.count();
+    const questao_quiz = prisma.questao.findFirst({
+      where,
+      skip: Math.floor(Math.random() * (numero_questoes - 10))
+    });
+    return questao_quiz as Promise<RegistroQuestaoCompleta | null>;
   }
 
   async criar(data: CriarQuestaoDto, criadoPorId: string) {

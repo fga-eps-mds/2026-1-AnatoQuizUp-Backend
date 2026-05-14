@@ -66,6 +66,12 @@ export type FiltroListarQuestoesQueryDto = {
   tipo?: TipoQuestaoApi;
 };
 
+export type FiltroQuestaoQuizQueryDto = {
+  tema?: string;
+  dificuldade?: DificuldadeApi;
+  tipo?: TipoQuestaoApi;
+}
+
 export type RegistroQuestaoCompleta = Questao & {
   tema: Tema;
   alternativas: QuestaoAlternativa | null;
@@ -89,6 +95,20 @@ export type RespostaQuestaoDto = {
   criadoEm: string;
   atualizadoEm: string;
   excluidoEm: string | null;
+};
+
+export type RespostaQuestaoQuizDto = {
+  id: string;
+  tema: {
+    id: string;
+    nome: string;
+  };
+  enunciado: string;
+  tipo: TipoQuestaoApi;
+  dificuldade: DificuldadeApi;
+  imagem: string | null;
+  alternativas: Partial<AlternativasMultiplaEscolhaDto>;
+  status: StatusQuestao;
 };
 
 export function mapearTipoApiParaBanco(tipo: TipoQuestaoApi): TipoQuestao {
@@ -135,5 +155,36 @@ export function converterParaRespostaQuestao(questao: RegistroQuestaoCompleta): 
     criadoEm: questao.criadoEm.toISOString(),
     atualizadoEm: questao.atualizadoEm.toISOString(),
     excluidoEm: questao.excluidoEm?.toISOString() ?? null,
+  };
+}
+
+export function converterParaRespostaQuestaoQuiz(questao: RegistroQuestaoCompleta): RespostaQuestaoQuizDto {
+  const tipo = mapearTipoBancoParaApi(questao.tipoQuestao);
+  const alternativas =
+    tipo === TIPO_QUESTAO_API.VERDADEIRO_FALSO
+      ? {
+          C: questao.alternativas?.alternativaC,
+          E: questao.alternativas?.alternativaE,
+        }
+      : {
+          A: questao.alternativas?.alternativaA,
+          B: questao.alternativas?.alternativaB,
+          C: questao.alternativas?.alternativaC,
+          D: questao.alternativas?.alternativaD,
+          E: questao.alternativas?.alternativaE,
+        };
+
+  return {
+    id: questao.id,
+    tema: {
+      id: questao.tema.id,
+      nome: questao.tema.nome,
+    },
+    enunciado: questao.enunciado,
+    tipo,
+    dificuldade: questao.dificuldade,
+    imagem: questao.urlImagem,
+    alternativas,
+    status: questao.status,
   };
 }

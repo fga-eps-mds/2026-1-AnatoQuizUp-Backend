@@ -13,10 +13,13 @@ import type {
   FiltroListarQuestoesQueryDto,
   RespostaQuestaoDto,
   AlternativasQuestaoDto,
+  FiltroQuestaoQuizQueryDto,
+  RespostaQuestaoQuizDto,
 } from "./dto/question.types";
 import {
   TIPO_QUESTAO_API,
   converterParaRespostaQuestao,
+  converterParaRespostaQuestaoQuiz,
   mapearTipoBancoParaApi,
 } from "./dto/question.types";
 import type { QuestionRepository } from "./question.repository";
@@ -53,6 +56,20 @@ export class QuestionService {
       dados: data.map(converterParaRespostaQuestao),
       metadados: montarMetadadosPaginacao(paginacao, total),
     };
+  }
+
+  async filtrar_questao_quiz(query: FiltroQuestaoQuizQueryDto): Promise<RespostaQuestaoQuizDto> {
+    const questao_quiz = await this.questionRepository.filtrar_quiz(query);
+
+    if(!questao_quiz){
+      throw new ErroAplicacao({
+        codigoStatus: 404,
+        codigo: CodigoDeErro.NAO_ENCONTRADO,
+        mensagem: MENSAGENS.questaoNaoEncontrada,
+      });
+    }
+    
+    return converterParaRespostaQuestaoQuiz(questao_quiz);
   }
 
   async criar(data: CriarQuestaoDto, criadoPorId: string): Promise<RespostaQuestaoDto> {
