@@ -1,6 +1,6 @@
 # AnatoQuizUp Backend
 
-Backend do projeto **AnatoQuizUp**: regras de negócio, autenticação, autorização e persistência. Usa `Node.js`, `TypeScript`, `Express`, `Prisma` e `PostgreSQL`.
+Backend Auth do projeto **AnatoQuizUp**: autenticação, identidade, administração de usuários e persistência do banco de autenticação. Usa `Node.js`, `TypeScript`, `Express`, `Prisma` e `PostgreSQL`.
 
 > **A partir de 2026-05-05** este serviço deixou de ser exposto publicamente. Em produção fica em **rede privada** e aceita somente requisições vindas do **BFF** (`fga-eps-mds/2026-1-AnatoQuizUp-BFF`) com header `X-Internal-Token` válido. Em desenvolvimento, o BFF roda em paralelo na porta `4000` e o Frontend aponta para ele.
 
@@ -152,7 +152,7 @@ make prisma-all  # generate + migrate + seed
 | `make db-reset` | `docker compose down -v && docker compose up -d db` |
 | `make prisma-all` | `npm run prisma:generate && npm run prisma:migrate && npm run prisma:seed` |
 
-## Rotas atualmente expostas
+## Rotas atualmente expostas pelo Backend/Auth
 
 > Todas as rotas `/api/*` exigem o header `X-Internal-Token` (validação no middleware `middlewareTokenInterno`). Apenas `GET /health` é público.
 
@@ -168,7 +168,7 @@ make prisma-all  # generate + migrate + seed
 - `GET|PATCH /api/v1/admin/usuarios[/:id[/status]]`
 - `POST|GET /api/v1/exemplos[/:id]`
 
-Detalhes de payload em [docs/arquitetura/api/](https://fga-eps-mds.github.io/2026-1-AnatoQuizUp-Doc/) (gerado a partir do repo Doc).
+As rotas de questões não pertencem mais a este serviço; o BFF encaminha `/api/v1/questoes/*` para o Quiz-Service. Detalhes de payload em [docs/arquitetura/api/](https://fga-eps-mds.github.io/2026-1-AnatoQuizUp-Doc/) (gerado a partir do repo Doc).
 
 ## Estrutura do projeto
 
