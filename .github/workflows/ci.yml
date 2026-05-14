@@ -99,12 +99,12 @@ jobs:
         if: github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.base_ref == 'main'
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          PROJECT_KEY: fga-eps-mds_2026-1-AnatoQuizUp-API
+          PROJECT_KEY: fga-eps-mds_2026-1-AnatoQuizUp-Backend
         run: |
-          # Nome: fga-eps-mds-2026_1_UNB-AnatoQuizUp-API-MM-DD-YYYY-HH-MM-SS-vX.Y.Z.json
+          # Nome: fga-eps-mds-2026_1_UNB-AnatoQuizUp-Backend-MM-DD-YYYY-HH-MM-SS-vX.Y.Z.json
           SEMESTER="2026_1"
           PROJECT_NAME="AnatoQuizUp"
-          REPO_NAME="API"
+          REPO_NAME="Backend"
           DATE_HORA=$(date -u +"%m-%d-%Y-%H-%M-%S")
           VERSION=$(node -p "require('./package.json').version" 2>/dev/null || echo "0.0.0")
           VERSAO_RELEASE="v${VERSION}"
@@ -125,7 +125,7 @@ jobs:
         if: github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.base_ref == 'main'
         uses: actions/upload-artifact@v4
         with:
-          name: metrics-back-${{ github.sha }}
+          name: metrics-backend-${{ github.sha }}
           path: ${{ env.METRICS_FILE }}
           retention-days: 90
 
