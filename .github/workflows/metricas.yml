@@ -2,9 +2,13 @@ name: Export de métricas
 
 on:
   workflow_dispatch:
-  push:
+  workflow_run:
+    workflows:
+      - CI - Usuario Service
     branches:
       - main
+    types:
+      - completed
   pull_request:
     branches:
       - main
@@ -13,7 +17,7 @@ on:
 
 jobs:
   release:
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || (github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'NOT RELEASE') == false)
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') || (github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'NOT RELEASE') == false)
     runs-on: "ubuntu-latest"
     environment: actions
     
@@ -47,8 +51,8 @@ jobs:
           git config --global user.email "${{secrets.USER_EMAIL}}"
           git config --global user.name "${{secrets.USER_NAME}}"
           git clone --single-branch --branch main "https://x-access-token:${{secrets.DOC_PUSH_TOKEN}}@github.com/fga-eps-mds/2026-1-AnatoQuizUp-Doc.git" doc
-          mkdir -p doc/analytics-raw-data
-          cp -R analytics-raw-data/*.json doc/analytics-raw-data
+          mkdir -p doc/analytics-raw-data/Usuario-Service
+          cp -R analytics-raw-data/*.json doc/analytics-raw-data/Usuario-Service
           cd doc
           git add .
           git commit -m "Adicionando métricas do repositório ${{ github.event.repository.name }} ${{ github.ref_name }}" || echo "Sem alterações para commitar"
