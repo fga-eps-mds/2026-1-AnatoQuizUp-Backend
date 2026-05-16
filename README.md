@@ -262,3 +262,4 @@ O caminho recomendado, porém, é subir o BFF (porta 4000) e bater nele — assi
 3. Garanta `make lint`, `make test-ci` e `make build` verdes antes do PR.
 4. Cobertura mínima: **85%** (DP08).
 5. Abra PR para `develop`.
+
